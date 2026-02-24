@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         <!-- AdMob App ID — replace with your real one -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+            android:value="ca-app-pub-2619727838493895~XXXXXXXXXX"/>
 
         <activity android:name=".MainActivity"
             android:exported="true">
