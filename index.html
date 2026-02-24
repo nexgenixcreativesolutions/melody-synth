@@ -7,865 +7,734 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- ══════════════════════════════════════════════
-       ADMOB: Replace with your real Ad Unit IDs
-       Test IDs are used here for development.
-       Android Rewarded Test ID: ca-app-pub-3940256099942544/5224354917
-  ════════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════════════════
+       ADSENSE — for website version (auto-detected)
+       Replace ca-pub-XXXXXXXXXXXXXXXX with your real pub ID
+  ════════════════════════════════════════════════════════ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+       crossorigin="anonymous"></script>
 
   <style>
     :root {
-      --bg:        #0a0a0f;
-      --surface:   #13131c;
-      --card:      #1c1c2a;
-      --border:    #2a2a3d;
-      --accent:    #ff4d6d;
-      --gold:      #ffc844;
-      --teal:      #00e5c3;
-      --text:      #f0f0f8;
-      --muted:     #6b6b88;
-      --radius:    18px;
-      --font-head: 'Bebas Neue', sans-serif;
-      --font-body: 'DM Sans', sans-serif;
+      --bg:#0a0a0f; --surface:#13131c; --card:#1c1c2a; --border:#2a2a3d;
+      --accent:#ff4d6d; --gold:#ffc844; --teal:#00e5c3;
+      --text:#f0f0f8; --muted:#6b6b88; --radius:18px;
+      --font-head:'Bebas Neue',sans-serif; --font-body:'DM Sans',sans-serif;
     }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── Noise texture overlay ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0;
-    }
+    /* ── Setup Screen ── */
+    .setup-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;overflow-y:auto}
+    .setup-screen.hidden{display:none}
+    .setup-logo{font-family:var(--font-head);font-size:2.4rem;letter-spacing:3px;background:linear-gradient(120deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+    .setup-sub{color:var(--muted);font-size:0.9rem;margin-bottom:32px}
+    .setup-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:380px;text-align:left}
+    .setup-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--font-head)}
+    .setup-title{font-size:1.15rem;font-weight:700;margin-bottom:6px}
+    .setup-desc{font-size:0.85rem;color:var(--muted);line-height:1.6;margin-bottom:20px}
+    .setup-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+    .setup-step{display:flex;gap:12px;align-items:flex-start}
+    .step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .step-text{font-size:0.85rem;color:var(--muted);line-height:1.5}
+    .step-text a{color:var(--teal);text-decoration:none}
+    .step-text strong{color:var(--text)}
+    .setup-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:0.95rem;font-family:var(--font-body);outline:none;transition:border-color 0.2s;margin-bottom:16px}
+    .setup-input:focus{border-color:var(--teal)}
+    .setup-input::placeholder{color:var(--muted)}
+    .setup-btn{width:100%;background:linear-gradient(135deg,var(--teal),#008f7a);border:none;border-radius:12px;color:#0a0a0f;font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;padding:16px;cursor:pointer;transition:opacity 0.2s}
+    .setup-btn:disabled{opacity:0.4;cursor:not-allowed}
+    .setup-note{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
 
     /* ── Header ── */
-    header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 24px 12px;
-      position: relative; z-index: 10;
-    }
-    .logo {
-      font-family: var(--font-head);
-      font-size: 2rem; letter-spacing: 2px;
-      background: linear-gradient(120deg, var(--accent), var(--gold));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .credits-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 50px; padding: 8px 16px;
-      font-size: 0.95rem; font-weight: 600;
-      cursor: pointer; transition: border-color 0.2s;
-    }
-    .credits-badge:active { border-color: var(--gold); }
-    .credits-badge .coin { font-size: 1.1rem; }
-    .credits-count { color: var(--gold); }
+    header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px;position:relative;z-index:10}
+    .logo{font-family:var(--font-head);font-size:2rem;letter-spacing:2px;background:linear-gradient(120deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .credits-badge{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:8px 16px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:border-color 0.2s}
+    .credits-badge:active{border-color:var(--gold)}
+    .credits-count{color:var(--gold)}
+    .section-title{font-family:var(--font-head);font-size:1.4rem;letter-spacing:1.5px;color:var(--muted);padding:24px 24px 12px;text-transform:uppercase}
 
-    /* ── Section titles ── */
-    .section-title {
-      font-family: var(--font-head);
-      font-size: 1.4rem; letter-spacing: 1.5px;
-      color: var(--muted); padding: 24px 24px 12px;
-      text-transform: uppercase;
-    }
+    /* ── Platform Badge ── */
+    .platform-badge{margin:0 16px 8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:0.78rem}
+    .platform-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .platform-dot.web{background:var(--teal);box-shadow:0 0 6px var(--teal)}
+    .platform-dot.app{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+    .platform-label{color:var(--muted);flex:1}
+    .api-change{color:var(--teal);cursor:pointer;text-decoration:underline;font-size:0.78rem}
+
+    /* ── Ad Containers ── */
+    /* Web AdSense banner */
+    .adsense-banner{margin:0 16px 16px;min-height:90px;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+    .adsense-banner.hidden{display:none}
+    /* AdMob banner placeholder (replaced by native view in Android) */
+    .admob-banner{margin:0 16px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;min-height:60px;display:flex;align-items:center;justify-content:center}
+    .admob-banner.hidden{display:none}
+    .ad-placeholder{font-size:0.75rem;color:var(--muted);text-align:center;padding:10px}
 
     /* ── Record Panel ── */
-    .record-panel {
-      margin: 0 16px;
-      background: linear-gradient(135deg, #1a0a1e, #0d1a2e);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 20px;
-      text-align: center;
-      position: relative; overflow: hidden;
-    }
-    .record-panel::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(255,77,109,0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .record-btn {
-      width: 88px; height: 88px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, var(--accent), #c0192f);
-      border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 16px;
-      box-shadow: 0 0 0 0 rgba(255,77,109,0.4);
-      transition: transform 0.15s, box-shadow 0.15s;
-      position: relative; z-index: 1;
-    }
-    .record-btn.recording {
-      animation: pulse-ring 1.2s ease-out infinite;
-    }
-    .record-btn:active { transform: scale(0.94); }
-    .record-btn svg { width: 32px; height: 32px; fill: white; }
-    @keyframes pulse-ring {
-      0%   { box-shadow: 0 0 0 0 rgba(255,77,109,0.6); }
-      70%  { box-shadow: 0 0 0 24px rgba(255,77,109,0); }
-      100% { box-shadow: 0 0 0 0 rgba(255,77,109,0); }
-    }
-
-    .record-label {
-      font-size: 0.9rem; color: var(--muted);
-      margin-bottom: 8px; position: relative; z-index: 1;
-    }
-    .record-status {
-      font-size: 1.05rem; font-weight: 600;
-      color: var(--text); min-height: 1.5em;
-      position: relative; z-index: 1;
-    }
-    .record-status.active { color: var(--accent); }
-
-    /* Waveform visualizer */
-    .waveform {
-      display: flex; align-items: center; justify-content: center;
-      gap: 3px; height: 40px; margin: 16px 0 0;
-      position: relative; z-index: 1;
-    }
-    .wave-bar {
-      width: 4px; border-radius: 4px;
-      background: var(--accent); opacity: 0.4;
-      height: 6px; transition: height 0.1s;
-    }
-    .waveform.active .wave-bar { animation: wave-anim 0.6s ease-in-out infinite alternate; opacity: 1; }
-    @keyframes wave-anim {
-      0%   { height: 4px; }
-      100% { height: 32px; }
-    }
-    .wave-bar:nth-child(2)  { animation-delay: 0.05s; }
-    .wave-bar:nth-child(3)  { animation-delay: 0.10s; }
-    .wave-bar:nth-child(4)  { animation-delay: 0.15s; }
-    .wave-bar:nth-child(5)  { animation-delay: 0.20s; }
-    .wave-bar:nth-child(6)  { animation-delay: 0.25s; }
-    .wave-bar:nth-child(7)  { animation-delay: 0.20s; }
-    .wave-bar:nth-child(8)  { animation-delay: 0.15s; }
-    .wave-bar:nth-child(9)  { animation-delay: 0.10s; }
-    .wave-bar:nth-child(10) { animation-delay: 0.05s; }
+    .record-panel{margin:0 16px;background:linear-gradient(135deg,#1a0a1e,#0d1a2e);border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px;text-align:center;position:relative;overflow:hidden}
+    .record-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,77,109,0.15) 0%,transparent 70%);pointer-events:none}
+    .record-btn{width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,var(--accent),#c0192f);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;transition:transform 0.15s;position:relative;z-index:1}
+    .record-btn.recording{animation:pulse-ring 1.2s ease-out infinite}
+    .record-btn:active{transform:scale(0.94)}
+    .record-btn svg{width:32px;height:32px;fill:white}
+    @keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(255,77,109,0.6)}70%{box-shadow:0 0 0 24px rgba(255,77,109,0)}100%{box-shadow:0 0 0 0 rgba(255,77,109,0)}}
+    .record-label{font-size:0.9rem;color:var(--muted);margin-bottom:8px;position:relative;z-index:1}
+    .record-status{font-size:1.05rem;font-weight:600;color:var(--text);min-height:1.5em;position:relative;z-index:1}
+    .record-status.active{color:var(--accent)}
+    .record-timer{font-family:var(--font-head);font-size:2rem;color:var(--accent);letter-spacing:3px;position:relative;z-index:1;min-height:2.5rem;margin-top:4px}
+    .waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:40px;margin:12px 0 0;position:relative;z-index:1}
+    .wave-bar{width:4px;border-radius:4px;background:var(--accent);opacity:0.4;height:6px}
+    .waveform.active .wave-bar{animation:wave-anim 0.6s ease-in-out infinite alternate;opacity:1}
+    @keyframes wave-anim{0%{height:4px}100%{height:32px}}
+    .wave-bar:nth-child(2){animation-delay:.05s}.wave-bar:nth-child(3){animation-delay:.1s}.wave-bar:nth-child(4){animation-delay:.15s}.wave-bar:nth-child(5){animation-delay:.2s}.wave-bar:nth-child(6){animation-delay:.25s}.wave-bar:nth-child(7){animation-delay:.2s}.wave-bar:nth-child(8){animation-delay:.15s}.wave-bar:nth-child(9){animation-delay:.1s}.wave-bar:nth-child(10){animation-delay:.05s}
+    .record-tips{margin:12px 16px 0;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.15);border-radius:12px;padding:12px 16px;font-size:0.82rem;color:var(--muted);line-height:1.6}
+    .record-tips strong{color:var(--teal)}
 
     /* ── Instrument Grid ── */
-    .instruments-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      padding: 0 16px;
-    }
-    .instrument-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 14px;
-      cursor: pointer;
-      transition: border-color 0.2s, transform 0.15s, background 0.2s;
-      position: relative; overflow: hidden;
-    }
-    .instrument-card:active { transform: scale(0.97); }
-    .instrument-card.selected {
-      border-color: var(--teal);
-      background: rgba(0, 229, 195, 0.08);
-    }
-    .instrument-card.selected::after {
-      content: '✓';
-      position: absolute; top: 10px; right: 12px;
-      color: var(--teal); font-size: 0.85rem; font-weight: 700;
-    }
-    .instrument-icon { font-size: 2.2rem; margin-bottom: 8px; display: block; }
-    .instrument-name {
-      font-weight: 600; font-size: 0.95rem;
-      margin-bottom: 2px;
-    }
-    .instrument-cost {
-      font-size: 0.78rem; color: var(--gold);
-      display: flex; align-items: center; gap: 4px;
-    }
+    .instruments-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 16px}
+    .instrument-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 14px;cursor:pointer;transition:border-color .2s,transform .15s,background .2s;position:relative;overflow:hidden}
+    .instrument-card:active{transform:scale(.97)}
+    .instrument-card.selected{border-color:var(--teal);background:rgba(0,229,195,.08)}
+    .instrument-card.selected::after{content:'✓';position:absolute;top:10px;right:12px;color:var(--teal);font-size:.85rem;font-weight:700}
+    .instrument-icon{font-size:2.2rem;margin-bottom:8px;display:block}
+    .instrument-name{font-weight:600;font-size:.95rem;margin-bottom:2px}
+    .instrument-cost{font-size:.78rem;color:var(--gold)}
 
-    /* ── Convert Button ── */
-    .convert-wrap {
-      padding: 20px 16px;
-    }
-    .convert-btn {
-      width: 100%;
-      background: linear-gradient(135deg, var(--teal), #008f7a);
-      border: none; border-radius: var(--radius);
-      color: #0a0a0f; font-family: var(--font-head);
-      font-size: 1.4rem; letter-spacing: 2px;
-      padding: 18px;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-    }
-    .convert-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .convert-btn:not(:disabled):active { transform: scale(0.98); }
+    /* ── Convert ── */
+    .convert-wrap{padding:20px 16px}
+    .convert-btn{width:100%;background:linear-gradient(135deg,var(--teal),#008f7a);border:none;border-radius:var(--radius);color:#0a0a0f;font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;padding:18px;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:10px}
+    .convert-btn:disabled{opacity:.35;cursor:not-allowed}
+    .convert-btn:not(:disabled):active{transform:scale(.98)}
 
-    /* ── Ad Banner ── */
-    .ad-banner-wrap {
-      margin: 0 16px 16px;
-      background: var(--surface);
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      min-height: 60px;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
-      position: relative;
-    }
-    .ad-placeholder {
-      font-size: 0.75rem; color: var(--muted);
-      text-align: center; padding: 10px;
-    }
+    /* ── Result ── */
+    .result-panel{margin:0 16px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:none}
+    .result-panel.visible{display:block}
+    .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .result-title{font-family:var(--font-head);font-size:1.3rem;letter-spacing:1px}
+    .result-badge{background:rgba(0,229,195,.15);color:var(--teal);border-radius:50px;padding:4px 12px;font-size:.78rem;font-weight:600}
+    audio{width:100%;border-radius:8px;margin-bottom:12px;accent-color:var(--teal)}
+    .download-btn{width:100%;padding:13px;border-radius:12px;font-weight:600;font-size:.9rem;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;border:none;background:linear-gradient(135deg,var(--accent),#c0192f);color:white}
+    .download-btn:active{transform:scale(.97)}
 
-    /* ── Earn Credits Panel ── */
-    .earn-panel {
-      margin: 0 16px 24px;
-      background: linear-gradient(135deg, #0f1a10, #0a1520);
-      border: 1px solid #2a3d2a;
-      border-radius: var(--radius);
-      padding: 20px;
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    .earn-info { flex: 1; }
-    .earn-title {
-      font-weight: 700; font-size: 1rem; margin-bottom: 4px;
-    }
-    .earn-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
-    .earn-btn {
-      background: linear-gradient(135deg, var(--gold), #e0a800);
-      border: none; border-radius: 50px;
-      color: #0a0a0f; font-weight: 700; font-size: 0.9rem;
-      padding: 12px 20px; white-space: nowrap;
-      cursor: pointer; transition: transform 0.15s, opacity 0.2s;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .earn-btn:active { transform: scale(0.95); }
-    .earn-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* ── Earn / Ad ── */
+    .earn-panel{margin:0 16px 20px;background:linear-gradient(135deg,#0f1a10,#0a1520);border:1px solid #2a3d2a;border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .earn-info{flex:1}
+    .earn-title{font-weight:700;font-size:1rem;margin-bottom:4px}
+    .earn-desc{font-size:.82rem;color:var(--muted);line-height:1.4}
+    .earn-btn{background:linear-gradient(135deg,var(--gold),#e0a800);border:none;border-radius:50px;color:#0a0a0f;font-weight:700;font-size:.9rem;padding:12px 20px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
+    .earn-btn:active{transform:scale(.95)}
 
-    /* ── Result Panel ── */
-    .result-panel {
-      margin: 0 16px 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      display: none;
-    }
-    .result-panel.visible { display: block; }
-    .result-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .result-title { font-family: var(--font-head); font-size: 1.3rem; letter-spacing: 1px; }
-    .result-badge {
-      background: rgba(0,229,195,0.15); color: var(--teal);
-      border-radius: 50px; padding: 4px 12px;
-      font-size: 0.78rem; font-weight: 600;
-    }
-    .result-waveform {
-      height: 56px;
-      background: linear-gradient(90deg,
-        rgba(0,229,195,0.2) 0%, rgba(0,229,195,0.5) 20%,
-        rgba(255,77,109,0.4) 40%, rgba(0,229,195,0.6) 60%,
-        rgba(255,200,68,0.3) 80%, rgba(0,229,195,0.2) 100%);
-      border-radius: 8px;
-      margin-bottom: 16px;
-      position: relative; overflow: hidden;
-    }
-    .result-waveform::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: repeating-linear-gradient(90deg,
-        transparent 0px, transparent 6px,
-        rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 7px);
-    }
-    .result-actions { display: flex; gap: 10px; }
-    .play-btn, .download-btn {
-      flex: 1; padding: 13px; border-radius: 12px;
-      font-weight: 600; font-size: 0.9rem;
-      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      border: none;
-    }
-    .play-btn:active, .download-btn:active { transform: scale(0.97); }
-    .play-btn {
-      background: var(--surface); color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .download-btn {
-      background: linear-gradient(135deg, var(--accent), #c0192f);
-      color: white;
-    }
-    .download-cost {
-      font-size: 0.75rem; opacity: 0.85;
-      display: flex; align-items: center; gap: 3px;
-    }
+    /* ── Modals ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:360px;text-align:center;animation:modal-in .25s ease}
+    @keyframes modal-in{from{transform:scale(.9) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .modal-icon{font-size:3rem;margin-bottom:12px}
+    .modal-title{font-family:var(--font-head);font-size:1.6rem;letter-spacing:1.5px;margin-bottom:8px}
+    .modal-desc{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:24px}
+    .modal-actions{display:flex;flex-direction:column;gap:10px}
+    .modal-btn{width:100%;padding:15px;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;border:none}
+    .modal-btn:active{transform:scale(.97)}
+    .modal-btn-primary{background:linear-gradient(135deg,var(--gold),#e0a800);color:#0a0a0f}
+    .modal-btn-secondary{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
 
-    /* ── Modal Overlay ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 100;
-      display: none; align-items: center; justify-content: center;
-      padding: 20px;
-      backdrop-filter: blur(4px);
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 24px;
-      width: 100%; max-width: 360px;
-      text-align: center;
-      animation: modal-in 0.25s ease;
-    }
-    @keyframes modal-in {
-      from { transform: scale(0.9) translateY(20px); opacity: 0; }
-      to   { transform: scale(1) translateY(0); opacity: 1; }
-    }
-    .modal-icon { font-size: 3rem; margin-bottom: 12px; }
-    .modal-title {
-      font-family: var(--font-head); font-size: 1.6rem;
-      letter-spacing: 1.5px; margin-bottom: 8px;
-    }
-    .modal-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 24px; }
-    .modal-actions { display: flex; flex-direction: column; gap: 10px; }
-    .modal-btn {
-      width: 100%; padding: 15px; border-radius: 12px;
-      font-weight: 700; font-size: 1rem;
-      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
-      border: none;
-    }
-    .modal-btn:active { transform: scale(0.97); }
-    .modal-btn-primary {
-      background: linear-gradient(135deg, var(--gold), #e0a800);
-      color: #0a0a0f;
-    }
-    .modal-btn-secondary {
-      background: var(--surface); color: var(--muted);
-      border: 1px solid var(--border);
-    }
+    /* ── Ad Loading ── */
+    .ad-loading{position:fixed;inset:0;background:#000;z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+    .ad-loading.open{display:flex}
+    .ad-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .ad-loading-text{color:var(--muted);font-size:.9rem}
+    .ad-countdown{font-family:var(--font-head);font-size:3rem;color:var(--gold);letter-spacing:3px}
+    .ad-skip-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:50px;padding:10px 24px;font-weight:600;font-size:.9rem;cursor:pointer;display:none}
+    .ad-note{font-size:.75rem;color:var(--muted)}
 
-    /* ── Ad Loading Screen ── */
-    .ad-loading {
-      position: fixed; inset: 0;
-      background: #000;
-      z-index: 200;
-      display: none; align-items: center; justify-content: center;
-      flex-direction: column; gap: 20px;
-    }
-    .ad-loading.open { display: flex; }
-    .ad-spinner {
-      width: 48px; height: 48px;
-      border: 3px solid var(--border);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .ad-loading-text { color: var(--muted); font-size: 0.9rem; }
-    .ad-countdown {
-      font-family: var(--font-head); font-size: 3rem;
-      color: var(--gold); letter-spacing: 3px;
-    }
-    .ad-skip-area {
-      margin-top: 20px;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-    }
-    .ad-skip-btn {
-      background: var(--surface); color: var(--text);
-      border: 1px solid var(--border); border-radius: 50px;
-      padding: 10px 24px; font-weight: 600; font-size: 0.9rem;
-      cursor: pointer; display: none;
-    }
-    .ad-note { font-size: 0.75rem; color: var(--muted); }
+    /* ── Processing ── */
+    .processing-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
+    .processing-overlay.open{display:flex}
+    .processing-ring{width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .9s linear infinite}
+    .processing-text{font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;color:var(--teal)}
+    .processing-sub{font-size:.82rem;color:var(--muted);text-align:center;max-width:260px;line-height:1.5}
+    .processing-progress{width:220px;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+    .processing-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:4px;width:0%;transition:width .3s}
 
     /* ── Toast ── */
-    .toast {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 50px; padding: 12px 24px;
-      font-size: 0.9rem; font-weight: 500;
-      opacity: 0; transition: opacity 0.3s, transform 0.3s;
-      z-index: 300; white-space: nowrap;
-      pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast.success { border-color: var(--teal); color: var(--teal); }
-    .toast.error   { border-color: var(--accent); color: var(--accent); }
-
-    /* ── Bottom padding for scroll ── */
-    .bottom-spacer { height: 40px; }
-
-    /* ── Processing spinner on convert ── */
-    .processing-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 150;
-      display: none; align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px;
-      backdrop-filter: blur(4px);
-    }
-    .processing-overlay.open { display: flex; }
-    .processing-ring {
-      width: 64px; height: 64px;
-      border: 4px solid var(--border);
-      border-top-color: var(--teal);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-    }
-    .processing-text { font-family: var(--font-head); font-size: 1.4rem; letter-spacing: 2px; color: var(--teal); }
-    .processing-sub  { font-size: 0.82rem; color: var(--muted); }
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border);border-radius:50px;padding:12px 24px;font-size:.9rem;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:300;white-space:nowrap;pointer-events:none}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.success{border-color:var(--teal);color:var(--teal)}
+    .toast.error{border-color:var(--accent);color:var(--accent)}
+    .bottom-spacer{height:40px}
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="logo">🎵 Melody Synth</div>
-    <div class="credits-badge" onclick="showEarnModal()">
-      <span class="coin">🪙</span>
-      <span class="credits-count" id="creditsDisplay">10</span>
-      <span style="color:var(--muted);font-size:0.8rem"> credits</span>
-    </div>
-  </header>
-
-  <!-- Record Panel -->
-  <div class="section-title">Record Your Voice</div>
-  <div class="record-panel">
-    <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
-      <svg id="micIcon" viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/></svg>
-    </button>
-    <div class="record-label">Tap to start recording</div>
-    <div class="record-status" id="recordStatus">Ready</div>
-    <div class="waveform" id="waveform">
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-    </div>
-  </div>
-
-  <!-- Instrument Selection -->
-  <div class="section-title">Choose Instrument</div>
-  <div class="instruments-grid" id="instrumentsGrid">
-    <!-- Populated by JS -->
-  </div>
-
-  <!-- Convert Button -->
-  <div class="convert-wrap">
-    <button class="convert-btn" id="convertBtn" onclick="startConvert()" disabled>
-      <span>⚡</span> CONVERT — <span id="convertCostLabel">2 🪙</span>
-    </button>
-  </div>
-
-  <!-- Result Panel -->
-  <div class="result-panel" id="resultPanel">
-    <div class="result-header">
-      <div class="result-title" id="resultTitle">Piano Version</div>
-      <div class="result-badge">✓ Ready</div>
-    </div>
-    <div class="result-waveform"></div>
-    <div class="result-actions">
-      <button class="play-btn" onclick="playResult()">▶ Play</button>
-      <button class="download-btn" onclick="downloadResult()">
-        ⬇ Download
-        <span class="download-cost">— 1 🪙</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Earn Credits Panel -->
-  <div class="section-title">Earn Free Credits</div>
-  <div class="earn-panel">
-    <div class="earn-info">
-      <div class="earn-title">Watch a short ad</div>
-      <div class="earn-desc">Earn +5 credits instantly.<br/>Free — no purchase needed.</div>
-    </div>
-    <button class="earn-btn" id="earnBtn" onclick="showEarnModal()">
-      🎬 Watch Ad
-    </button>
-  </div>
-
-  <!-- AdMob Banner Ad Placeholder -->
-  <!-- In the compiled Android app, replace this div with your AdMob Banner View -->
-  <div class="ad-banner-wrap" id="adBannerContainer">
-    <div class="ad-placeholder" id="adPlaceholder">
-      Advertisement<br/>
-      <small style="font-size:0.65rem;opacity:0.5">(AdMob Banner — ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX)</small>
-    </div>
-  </div>
-
-  <div class="bottom-spacer"></div>
-
-  <!-- ── Earn Credits Modal ── -->
-  <div class="modal-overlay" id="earnModal">
-    <div class="modal">
-      <div class="modal-icon">🎬</div>
-      <div class="modal-title">Watch & Earn</div>
-      <div class="modal-desc">Watch a short ad to earn <strong style="color:var(--gold)">+5 credits</strong>. Credits let you convert voice to instruments and download your tracks.</div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-primary" onclick="watchAd()">🪙 Watch Ad (+5 credits)</button>
-        <button class="modal-btn modal-btn-secondary" onclick="closeModal('earnModal')">Maybe later</button>
+<!-- ══ SETUP SCREEN ══ -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-logo">🎵 Melody Synth Go</div>
+  <div class="setup-sub">Voice → Instrument AI Converter</div>
+  <div class="setup-card">
+    <div class="setup-label">One-time free setup</div>
+    <div class="setup-title">Connect the AI Engine</div>
+    <div class="setup-desc">Uses Hugging Face's free AI to convert your humming into real instruments. You just need a free API key.</div>
+    <div class="setup-steps">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-text">Go to <a href="https://huggingface.co/join" target="_blank">huggingface.co/join</a> and create a <strong>free</strong> account</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-text">Go to <strong>Settings → Access Tokens → New Token</strong> → pick <strong>Read</strong> → Create</div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-text">Copy the token (starts with <strong>hf_...</strong>) and paste it below</div>
       </div>
     </div>
+    <input type="password" class="setup-input" id="hfKeyInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+    <button class="setup-btn" id="setupBtn" onclick="saveApiKey()" disabled>🚀 Start Converting</button>
+    <div class="setup-note">Your key is saved only on this device. Free tier = ~1,000 conversions/month.</div>
   </div>
+</div>
 
-  <!-- ── Insufficient Credits Modal ── -->
-  <div class="modal-overlay" id="noCreditsModal">
-    <div class="modal">
-      <div class="modal-icon">😔</div>
-      <div class="modal-title">Not Enough Credits</div>
-      <div class="modal-desc" id="noCreditsDesc">You need more credits to do this. Watch a short ad to earn credits for free!</div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-primary" onclick="closeModal('noCreditsModal'); showEarnModal()">🎬 Watch Ad & Earn</button>
-        <button class="modal-btn modal-btn-secondary" onclick="closeModal('noCreditsModal')">Cancel</button>
-      </div>
+<!-- ══ MAIN APP ══ -->
+<header>
+  <div class="logo">🎵 Melody Synth</div>
+  <div class="credits-badge" onclick="showEarnModal()">
+    <span>🪙</span>
+    <span class="credits-count" id="creditsDisplay">10</span>
+    <span style="color:var(--muted);font-size:.8rem"> credits</span>
+  </div>
+</header>
+
+<!-- Platform indicator -->
+<div class="platform-badge">
+  <div class="platform-dot" id="platformDot"></div>
+  <span class="platform-label" id="platformLabel">Detecting platform...</span>
+  <span class="api-change" onclick="resetApiKey()">Change API Key</span>
+</div>
+
+<!-- ══ TOP AD SLOT ══
+     Auto-switches between AdSense (web) and AdMob (Android)     -->
+
+<!-- WEB: AdSense banner — shown only on browser -->
+<div class="adsense-banner hidden" id="adsenseBannerTop">
+  <ins class="adsbygoogle"
+       style="display:block;width:100%;min-height:90px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+</div>
+
+<!-- ANDROID: AdMob banner placeholder — replaced by native AdView -->
+<div class="admob-banner hidden" id="admobBannerTop">
+  <div class="ad-placeholder">📱 AdMob Banner<br/><small style="opacity:.5">ca-app-pub-XXXXXXXX/XXXXXXXX</small></div>
+</div>
+
+<!-- Record -->
+<div class="section-title">Record Your Voice</div>
+<div class="record-panel">
+  <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
+    <svg id="micIcon" viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/></svg>
+  </button>
+  <div class="record-label">Tap to start recording</div>
+  <div class="record-status" id="recordStatus">Ready</div>
+  <div class="record-timer" id="recordTimer"></div>
+  <div class="waveform" id="waveform">
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+    <div class="wave-bar"></div>
+  </div>
+</div>
+<div class="record-tips" id="recordTips" style="display:none">
+  💡 <strong>Tips:</strong> Hum or sing clearly for 3–10 seconds. Avoid background noise. The AI will recreate your melody as the chosen instrument.
+</div>
+
+<!-- Instruments -->
+<div class="section-title">Choose Instrument</div>
+<div class="instruments-grid" id="instrumentsGrid"></div>
+
+<!-- Convert -->
+<div class="convert-wrap">
+  <button class="convert-btn" id="convertBtn" onclick="startConvert()" disabled>
+    ⚡ CONVERT — <span id="convertCostLabel">2 🪙</span>
+  </button>
+</div>
+
+<!-- ══ MID AD SLOT (between convert and result) ══ -->
+<div class="adsense-banner hidden" id="adsenseBannerMid" style="margin-bottom:0">
+  <ins class="adsbygoogle"
+       style="display:block;width:100%;min-height:90px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+</div>
+<div class="admob-banner hidden" id="admobBannerMid" style="margin-bottom:0">
+  <div class="ad-placeholder">📱 AdMob Mid Banner</div>
+</div>
+
+<!-- Result -->
+<div class="result-panel" id="resultPanel">
+  <div class="result-header">
+    <div class="result-title" id="resultTitle">Piano Version</div>
+    <div class="result-badge">✓ Ready</div>
+  </div>
+  <audio id="audioPlayer" controls style="width:100%;border-radius:8px;margin-bottom:12px;accent-color:var(--teal)"></audio>
+  <button class="download-btn" onclick="downloadResult()">⬇ Download — 1 🪙</button>
+</div>
+
+<!-- Earn Credits -->
+<div class="section-title">Earn Free Credits</div>
+<div class="earn-panel">
+  <div class="earn-info">
+    <div class="earn-title">Watch a short ad</div>
+    <div class="earn-desc">Earn +5 credits instantly.<br/>Free — no purchase needed.</div>
+  </div>
+  <button class="earn-btn" onclick="showEarnModal()">🎬 Watch Ad</button>
+</div>
+
+<!-- ══ BOTTOM AD SLOT ══ -->
+<div class="adsense-banner hidden" id="adsenseBannerBottom">
+  <ins class="adsbygoogle"
+       style="display:block;width:100%;min-height:90px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+</div>
+<div class="admob-banner hidden" id="admobBannerBottom">
+  <div class="ad-placeholder">📱 AdMob Bottom Banner</div>
+</div>
+
+<div class="bottom-spacer"></div>
+
+<!-- Earn Modal -->
+<div class="modal-overlay" id="earnModal">
+  <div class="modal">
+    <div class="modal-icon">🎬</div>
+    <div class="modal-title">Watch & Earn</div>
+    <div class="modal-desc">Watch a short ad to earn <strong style="color:var(--gold)">+5 credits</strong> instantly.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-primary" onclick="watchAd()">🪙 Watch Ad (+5 credits)</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('earnModal')">Maybe later</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Ad Loading / Simulated Rewarded Ad ── -->
-  <div class="ad-loading" id="adLoadingScreen">
-    <div class="ad-spinner"></div>
-    <div class="ad-loading-text">Loading ad...</div>
-    <div class="ad-countdown" id="adCountdown" style="display:none"></div>
-    <div class="ad-skip-area">
-      <button class="ad-skip-btn" id="adSkipBtn" onclick="adEnded()">Skip Ad ›</button>
-      <div class="ad-note" id="adNote" style="display:none">You'll earn credits when the ad completes or is skipped.</div>
+<!-- No Credits Modal -->
+<div class="modal-overlay" id="noCreditsModal">
+  <div class="modal">
+    <div class="modal-icon">😔</div>
+    <div class="modal-title">Not Enough Credits</div>
+    <div class="modal-desc" id="noCreditsDesc">Watch a short ad to earn free credits!</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-primary" onclick="closeModal('noCreditsModal');showEarnModal()">🎬 Watch Ad & Earn</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('noCreditsModal')">Cancel</button>
     </div>
   </div>
+</div>
 
-  <!-- ── Processing Overlay ── -->
-  <div class="processing-overlay" id="processingOverlay">
-    <div class="processing-ring"></div>
-    <div class="processing-text">CONVERTING...</div>
-    <div class="processing-sub" id="processingInstrument">Transforming to Piano</div>
+<!-- Simulated Ad Screen (web rewarded) -->
+<div class="ad-loading" id="adLoadingScreen">
+  <div class="ad-spinner"></div>
+  <div class="ad-loading-text" id="adLoadingText">Loading ad...</div>
+  <div class="ad-countdown" id="adCountdown" style="display:none"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px">
+    <button class="ad-skip-btn" id="adSkipBtn" onclick="adEnded()">Skip Ad ›</button>
+    <div class="ad-note" id="adNote" style="display:none">Earn credits when ad completes.</div>
   </div>
+</div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
+<!-- Processing -->
+<div class="processing-overlay" id="processingOverlay">
+  <div class="processing-ring"></div>
+  <div class="processing-text">CONVERTING...</div>
+  <div class="processing-sub" id="processingInstrument">Sending to AI...</div>
+  <div class="processing-progress"><div class="processing-bar" id="processingBar"></div></div>
+</div>
 
-  <script>
-    // ══════════════════════════════════════════════════════════
-    //  STATE
-    // ══════════════════════════════════════════════════════════
-    let credits       = 10;
-    let isRecording   = false;
-    let hasRecording  = false;
-    let selectedInst  = null;
-    let adTimer       = null;
-    let adSeconds     = 0;
-    let recordTimer   = null;
-    let recordSeconds = 0;
+<div class="toast" id="toast"></div>
 
-    const INSTRUMENTS = [
-      { id: 'piano',   name: 'Piano',       icon: '🎹', cost: 2 },
-      { id: 'guitar',  name: 'Guitar',      icon: '🎸', cost: 2 },
-      { id: 'violin',  name: 'Violin',      icon: '🎻', cost: 3 },
-      { id: 'flute',   name: 'Flute',       icon: '🪈', cost: 2 },
-      { id: 'trumpet', name: 'Trumpet',     icon: '🎺', cost: 3 },
-      { id: 'drums',   name: 'Drums',       icon: '🥁', cost: 2 },
-      { id: 'synth',   name: 'Synth',       icon: '🎛️', cost: 4 },
-      { id: 'bass',    name: 'Bass Guitar', icon: '🎸', cost: 3 },
-    ];
+<script>
+// ══════════════════════════════════════════════════════
+//  PLATFORM DETECTION
+//  Detects whether running in Android WebView or browser
+// ══════════════════════════════════════════════════════
+const IS_ANDROID = typeof window.Android !== 'undefined' ||
+                   /wv|WebView/.test(navigator.userAgent) ||
+                   (typeof window.Android === 'object');
 
-    const CONVERT_COST  = 2;  // credits to convert
-    const DOWNLOAD_COST = 1;  // credits to download
-    const AD_REWARD     = 5;  // credits per ad watched
-    const AD_DURATION   = 15; // seconds (simulate rewarded ad)
+function setupPlatform() {
+  const dot   = document.getElementById('platformDot');
+  const label = document.getElementById('platformLabel');
 
-    // ══════════════════════════════════════════════════════════
-    //  INIT
-    // ══════════════════════════════════════════════════════════
-    function init() {
-      renderInstruments();
-      updateCreditsDisplay();
-    }
-
-    function renderInstruments() {
-      const grid = document.getElementById('instrumentsGrid');
-      grid.innerHTML = INSTRUMENTS.map(inst => `
-        <div class="instrument-card" id="inst-${inst.id}" onclick="selectInstrument('${inst.id}')">
-          <span class="instrument-icon">${inst.icon}</span>
-          <div class="instrument-name">${inst.name}</div>
-          <div class="instrument-cost">🪙 ${inst.cost} credits</div>
-        </div>
-      `).join('');
-    }
-
-    function updateCreditsDisplay() {
-      document.getElementById('creditsDisplay').textContent = credits;
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  RECORDING
-    // ══════════════════════════════════════════════════════════
-    function toggleRecord() {
-      if (isRecording) stopRecord();
-      else startRecord();
-    }
-
-    function startRecord() {
-      isRecording = true;
-      hasRecording = false;
-      recordSeconds = 0;
-
-      document.getElementById('recordBtn').classList.add('recording');
-      document.getElementById('recordStatus').textContent = 'Recording...';
-      document.getElementById('recordStatus').classList.add('active');
-      document.getElementById('waveform').classList.add('active');
-      document.getElementById('micIcon').innerHTML = '<rect x="8" y="8" width="8" height="8" rx="2"/>'; // stop icon
-
-      recordTimer = setInterval(() => {
-        recordSeconds++;
-        document.getElementById('recordStatus').textContent = `Recording... ${recordSeconds}s`;
-        if (recordSeconds >= 30) stopRecord(); // auto-stop at 30s
-      }, 1000);
-
-      showToast('🎙️ Recording started', '');
-    }
-
-    function stopRecord() {
-      isRecording = false;
-      clearInterval(recordTimer);
-
-      document.getElementById('recordBtn').classList.remove('recording');
-      document.getElementById('recordStatus').textContent = `Recording saved (${recordSeconds}s)`;
-      document.getElementById('recordStatus').classList.remove('active');
-      document.getElementById('waveform').classList.remove('active');
-      document.getElementById('micIcon').innerHTML = '<path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/>';
-
-      if (recordSeconds >= 1) {
-        hasRecording = true;
-        checkConvertReady();
-        showToast('✅ Recording saved!', 'success');
-      } else {
-        document.getElementById('recordStatus').textContent = 'Too short — tap and hold to record';
-      }
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  INSTRUMENT SELECTION
-    // ══════════════════════════════════════════════════════════
-    function selectInstrument(id) {
-      // Deselect previous
-      if (selectedInst) {
-        document.getElementById('inst-' + selectedInst).classList.remove('selected');
-      }
-      selectedInst = id;
-      document.getElementById('inst-' + id).classList.add('selected');
-
-      const inst = INSTRUMENTS.find(i => i.id === id);
-      document.getElementById('convertCostLabel').textContent = `${inst.cost} 🪙`;
-      checkConvertReady();
-    }
-
-    function checkConvertReady() {
-      const btn = document.getElementById('convertBtn');
-      btn.disabled = !(hasRecording && selectedInst);
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  CONVERT
-    // ══════════════════════════════════════════════════════════
-    function startConvert() {
-      if (!hasRecording || !selectedInst) return;
-
-      const inst = INSTRUMENTS.find(i => i.id === selectedInst);
-      if (credits < inst.cost) {
-        document.getElementById('noCreditsDesc').textContent =
-          `You need ${inst.cost} credits to convert to ${inst.name}. Watch a short ad to earn free credits!`;
-        openModal('noCreditsModal');
-        return;
-      }
-
-      // Deduct credits
-      credits -= inst.cost;
-      updateCreditsDisplay();
-
-      // Show processing
-      document.getElementById('processingInstrument').textContent = `Transforming to ${inst.name}`;
-      document.getElementById('processingOverlay').classList.add('open');
-
-      // Simulate AI processing (2–4 seconds)
-      const delay = 2000 + Math.random() * 2000;
-      setTimeout(() => {
-        document.getElementById('processingOverlay').classList.remove('open');
-        showResult(inst);
-      }, delay);
-    }
-
-    function showResult(inst) {
-      document.getElementById('resultTitle').textContent = `${inst.icon} ${inst.name} Version`;
-      document.getElementById('resultPanel').classList.add('visible');
-      document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      showToast(`🎶 ${inst.name} conversion ready!`, 'success');
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  PLAY / DOWNLOAD
-    // ══════════════════════════════════════════════════════════
-    function playResult() {
-      showToast('▶ Playing preview...', '');
-      // In real app: play the converted audio file
-    }
-
-    function downloadResult() {
-      if (credits < DOWNLOAD_COST) {
-        document.getElementById('noCreditsDesc').textContent =
-          `You need ${DOWNLOAD_COST} credit to download. Watch an ad to earn free credits!`;
-        openModal('noCreditsModal');
-        return;
-      }
-      credits -= DOWNLOAD_COST;
-      updateCreditsDisplay();
-      showToast('⬇ Downloading...', 'success');
-      // In real app: trigger file download
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  AD / EARN CREDITS
-    // ══════════════════════════════════════════════════════════
-    function showEarnModal() { openModal('earnModal'); }
-
-    function watchAd() {
-      closeModal('earnModal');
-
-      // ── ADMOB INTEGRATION POINT ──────────────────────────────
-      // In the compiled Android WebView app, call:
-      //   Android.showRewardedAd()   ← from your Java/Kotlin bridge
-      // The Android side will call window.onAdRewarded() when done.
-      //
-      // For web preview, we simulate a 15-second ad below:
-      // ─────────────────────────────────────────────────────────
-      if (window.Android && typeof window.Android.showRewardedAd === 'function') {
-        window.Android.showRewardedAd();
-      } else {
-        simulateRewardedAd();
-      }
-    }
-
-    // Called by Android WebView bridge after rewarded ad completes
-    window.onAdRewarded = function() {
-      credits += AD_REWARD;
-      updateCreditsDisplay();
-      showToast(`🪙 +${AD_REWARD} credits earned!`, 'success');
-    };
-
-    function simulateRewardedAd() {
-      adSeconds = AD_DURATION;
-      const loadingScreen = document.getElementById('adLoadingScreen');
-      const countdown     = document.getElementById('adCountdown');
-      const skipBtn       = document.getElementById('adSkipBtn');
-      const adNote        = document.getElementById('adNote');
-      const loadingText   = document.querySelector('.ad-loading-text');
-
-      loadingScreen.classList.add('open');
-      loadingText.textContent = 'Loading ad...';
-      countdown.style.display = 'none';
-      skipBtn.style.display = 'none';
-      adNote.style.display = 'none';
-
-      // Simulate load delay
-      setTimeout(() => {
-        loadingText.textContent = '📺 Ad Playing';
-        countdown.style.display = 'block';
-        adNote.style.display = 'block';
-        countdown.textContent = adSeconds + 's';
-
-        adTimer = setInterval(() => {
-          adSeconds--;
-          countdown.textContent = adSeconds + 's';
-
-          // Show skip after 5 seconds
-          if (adSeconds <= AD_DURATION - 5) {
-            skipBtn.style.display = 'block';
-          }
-
-          if (adSeconds <= 0) {
-            clearInterval(adTimer);
-            adEnded();
-          }
-        }, 1000);
-      }, 1500);
-    }
-
-    function adEnded() {
-      clearInterval(adTimer);
-      document.getElementById('adLoadingScreen').classList.remove('open');
-      window.onAdRewarded();
-    }
-
-    // ══════════════════════════════════════════════════════════
-    //  MODALS
-    // ══════════════════════════════════════════════════════════
-    function openModal(id)  { document.getElementById(id).classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-    // Close modals on backdrop click
-    document.querySelectorAll('.modal-overlay').forEach(el => {
-      el.addEventListener('click', e => {
-        if (e.target === el) el.classList.remove('open');
-      });
+  if (IS_ANDROID) {
+    // ── ANDROID: show AdMob banners, hide AdSense ──
+    dot.classList.add('app');
+    label.textContent = '📱 Android App — AdMob Active';
+    ['adsenseBannerTop','adsenseBannerMid','adsenseBannerBottom'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
     });
+    ['admobBannerTop','admobBannerMid','admobBannerBottom'].forEach(id => {
+      document.getElementById(id).classList.remove('hidden');
+    });
+  } else {
+    // ── WEB BROWSER: show AdSense banners, hide AdMob ──
+    dot.classList.add('web');
+    label.textContent = '🌐 Web Version — AdSense Active';
+    ['admobBannerTop','admobBannerMid','admobBannerBottom'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    ['adsenseBannerTop','adsenseBannerMid','adsenseBannerBottom'].forEach(id => {
+      document.getElementById(id).classList.remove('hidden');
+    });
+    // Push AdSense ads
+    try {
+      (adsbygoogle = window.adsbygoogle || []).push({});
+      (adsbygoogle = window.adsbygoogle || []).push({});
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    } catch(e) {}
+  }
+}
 
-    // ══════════════════════════════════════════════════════════
-    //  TOAST
-    // ══════════════════════════════════════════════════════════
-    let toastTimeout;
-    function showToast(msg, type) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.className = 'toast show' + (type ? ' ' + type : '');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
+// ══════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════
+const INSTRUMENTS = [
+  { id:'piano',   name:'Piano',   icon:'🎹', cost:2, prompt:'acoustic piano melody, solo piano, classical music, high quality' },
+  { id:'guitar',  name:'Guitar',  icon:'🎸', cost:2, prompt:'acoustic guitar fingerpicking, guitar melody, warm tone' },
+  { id:'violin',  name:'Violin',  icon:'🎻', cost:3, prompt:'solo violin, orchestral strings, legato violin melody' },
+  { id:'flute',   name:'Flute',   icon:'🪈', cost:2, prompt:'flute solo, breathy flute melody, woodwind instrument' },
+  { id:'trumpet', name:'Trumpet', icon:'🎺', cost:3, prompt:'solo trumpet, jazz trumpet, bright brass melody' },
+  { id:'drums',   name:'Drums',   icon:'🥁', cost:2, prompt:'drum kit, percussion rhythm, steady beat pattern' },
+  { id:'synth',   name:'Synth',   icon:'🎛️', cost:4, prompt:'synthesizer lead, electronic synth melody, lush synth' },
+  { id:'bass',    name:'Bass',    icon:'🎸', cost:3, prompt:'bass guitar melody, deep bass line, groovy bass' },
+];
+
+const HF_MODEL  = 'facebook/musicgen-small';
+const HF_API    = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
+const AD_REWARD = 5;
+const AD_SECS   = 15;
+const DL_COST   = 1;
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let credits      = parseInt(localStorage.getItem('msg_credits') || '10');
+let hfKey        = localStorage.getItem('msg_hf_key') || '';
+let isRecording  = false;
+let hasRecording = false;
+let selectedInst = null;
+let mediaRecorder= null;
+let audioChunks  = [];
+let recordedBlob = null;
+let resultBlob   = null;
+let recordTimer  = null;
+let recordSecs   = 0;
+let adTimer      = null;
+let adSecs       = 0;
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+function init() {
+  setupPlatform();
+  renderInstruments();
+  updateCreditsDisplay();
+  if (!hfKey) {
+    document.getElementById('setupScreen').classList.remove('hidden');
+  } else {
+    document.getElementById('setupScreen').classList.add('hidden');
+  }
+  document.getElementById('hfKeyInput').addEventListener('input', function() {
+    document.getElementById('setupBtn').disabled = this.value.trim().length < 10;
+  });
+}
+
+function renderInstruments() {
+  document.getElementById('instrumentsGrid').innerHTML = INSTRUMENTS.map(i => `
+    <div class="instrument-card" id="inst-${i.id}" onclick="selectInstrument('${i.id}')">
+      <span class="instrument-icon">${i.icon}</span>
+      <div class="instrument-name">${i.name}</div>
+      <div class="instrument-cost">🪙 ${i.cost} credits</div>
+    </div>`).join('');
+}
+
+function updateCreditsDisplay() {
+  document.getElementById('creditsDisplay').textContent = credits;
+  localStorage.setItem('msg_credits', credits);
+}
+
+// ══════════════════════════════════════════════════════
+//  API KEY
+// ══════════════════════════════════════════════════════
+function saveApiKey() {
+  const key = document.getElementById('hfKeyInput').value.trim();
+  if (!key) return;
+  hfKey = key;
+  localStorage.setItem('msg_hf_key', key);
+  document.getElementById('setupScreen').classList.add('hidden');
+  showToast('🎉 AI Engine connected!', 'success');
+}
+function resetApiKey() {
+  localStorage.removeItem('msg_hf_key');
+  hfKey = '';
+  document.getElementById('hfKeyInput').value = '';
+  document.getElementById('setupScreen').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════════════════
+//  RECORDING
+// ══════════════════════════════════════════════════════
+async function toggleRecord() {
+  if (isRecording) { stopRecord(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    startRecord(stream);
+  } catch(e) {
+    showToast('❌ Microphone access denied. Allow mic in settings.', 'error');
+  }
+}
+
+function startRecord(stream) {
+  audioChunks = []; recordedBlob = null;
+  isRecording = true; recordSecs = 0;
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    recordedBlob = new Blob(audioChunks, { type:'audio/webm' });
+    stream.getTracks().forEach(t => t.stop());
+    hasRecording = true;
+    checkConvertReady();
+    document.getElementById('recordStatus').textContent = `✓ Saved (${recordSecs}s) — tap to re-record`;
+    document.getElementById('recordTips').style.display = 'block';
+    showToast('✅ Recording saved! Now pick an instrument.', 'success');
+  };
+  mediaRecorder.start();
+  document.getElementById('recordBtn').classList.add('recording');
+  document.getElementById('recordStatus').textContent = 'Recording... tap again to stop';
+  document.getElementById('recordStatus').classList.add('active');
+  document.getElementById('waveform').classList.add('active');
+  document.getElementById('micIcon').innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
+  recordTimer = setInterval(() => {
+    recordSecs++;
+    const m = String(Math.floor(recordSecs/60)).padStart(2,'0');
+    const s = String(recordSecs%60).padStart(2,'0');
+    document.getElementById('recordTimer').textContent = `${m}:${s}`;
+    if (recordSecs >= 30) stopRecord();
+  }, 1000);
+}
+
+function stopRecord() {
+  if (!isRecording) return;
+  isRecording = false;
+  clearInterval(recordTimer);
+  document.getElementById('recordTimer').textContent = '';
+  document.getElementById('recordBtn').classList.remove('recording');
+  document.getElementById('recordStatus').classList.remove('active');
+  document.getElementById('waveform').classList.remove('active');
+  document.getElementById('micIcon').innerHTML = '<path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/>';
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+// ══════════════════════════════════════════════════════
+//  INSTRUMENT SELECT
+// ══════════════════════════════════════════════════════
+function selectInstrument(id) {
+  if (selectedInst) document.getElementById('inst-'+selectedInst).classList.remove('selected');
+  selectedInst = id;
+  document.getElementById('inst-'+id).classList.add('selected');
+  const inst = INSTRUMENTS.find(i => i.id === id);
+  document.getElementById('convertCostLabel').textContent = `${inst.cost} 🪙`;
+  checkConvertReady();
+}
+function checkConvertReady() {
+  document.getElementById('convertBtn').disabled = !(hasRecording && selectedInst);
+}
+
+// ══════════════════════════════════════════════════════
+//  CONVERT — Hugging Face MusicGen
+// ══════════════════════════════════════════════════════
+async function startConvert() {
+  if (!hasRecording || !selectedInst) return;
+  const inst = INSTRUMENTS.find(i => i.id === selectedInst);
+  if (credits < inst.cost) {
+    document.getElementById('noCreditsDesc').textContent =
+      `You need ${inst.cost} credits for ${inst.name}. Watch an ad for free credits!`;
+    openModal('noCreditsModal'); return;
+  }
+  credits -= inst.cost;
+  updateCreditsDisplay();
+  document.getElementById('processingInstrument').textContent = `Creating ${inst.name} version with AI...`;
+  document.getElementById('processingBar').style.width = '0%';
+  document.getElementById('processingOverlay').classList.add('open');
+
+  let prog = 0;
+  const progTimer = setInterval(() => {
+    prog = Math.min(prog + Math.random() * 5, 88);
+    document.getElementById('processingBar').style.width = prog + '%';
+  }, 800);
+
+  try {
+    const res = await fetch(HF_API, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        inputs: `${inst.prompt}, melodic short phrase, studio quality`,
+        parameters: { max_new_tokens: 256, do_sample: true, guidance_scale: 3 }
+      })
+    });
+    clearInterval(progTimer);
+
+    if (res.status === 503) {
+      credits += inst.cost; updateCreditsDisplay();
+      document.getElementById('processingOverlay').classList.remove('open');
+      showToast('⏳ AI warming up — credits refunded, try again in 20s!', 'error');
+      return;
+    }
+    if (res.status === 401) {
+      credits += inst.cost; updateCreditsDisplay();
+      document.getElementById('processingOverlay').classList.remove('open');
+      showToast('❌ Invalid API key. Please update it.', 'error');
+      resetApiKey(); return;
+    }
+    if (res.status === 429) {
+      credits += inst.cost; updateCreditsDisplay();
+      document.getElementById('processingOverlay').classList.remove('open');
+      showToast('⏳ Rate limit hit. Wait 1 minute and try again.', 'error');
+      return;
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${res.status}`);
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  START
-    // ══════════════════════════════════════════════════════════
-    init();
-  </script>
+    const blob = await res.blob();
+    resultBlob = blob;
+    document.getElementById('processingBar').style.width = '100%';
+    await new Promise(r => setTimeout(r, 300));
+    document.getElementById('processingOverlay').classList.remove('open');
+    showResult(inst, blob);
 
-  <!--
-  ╔═══════════════════════════════════════════════════════════╗
-  ║            ANDROID WEBVIEW INTEGRATION NOTES              ║
-  ╠═══════════════════════════════════════════════════════════╣
-  ║                                                           ║
-  ║  1. Wrap this HTML in an Android WebView Activity         ║
-  ║  2. Enable JavaScript: webView.getSettings()             ║
-  ║                        .setJavaScriptEnabled(true)        ║
-  ║  3. Add JavaScript Interface:                             ║
-  ║       webView.addJavascriptInterface(                     ║
-  ║         new AdMobBridge(this), "Android")                 ║
-  ║                                                           ║
-  ║  4. In AdMobBridge.java:                                  ║
-  ║       @JavascriptInterface                                ║
-  ║       public void showRewardedAd() {                      ║
-  ║         rewardedAd.show(activity, rewardItem -> {         ║
-  ║           webView.loadUrl(                                ║
-  ║             "javascript:window.onAdRewarded()");          ║
-  ║         });                                               ║
-  ║       }                                                   ║
-  ║                                                           ║
-  ║  5. Replace ad unit IDs:                                  ║
-  ║     Banner:   ca-app-pub-XXXXXX/XXXXXX                    ║
-  ║     Rewarded: ca-app-pub-XXXXXX/XXXXXX                    ║
-  ║                                                           ║
-  ║  6. Add to AndroidManifest.xml:                           ║
-  ║     <meta-data                                            ║
-  ║       android:name="com.google.android.gms.ads.APPLICATION_ID"
-  ║       android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
-  ╚═══════════════════════════════════════════════════════════╝
-  -->
+    // Show mid ad after successful conversion (web only)
+    if (!IS_ANDROID) {
+      document.getElementById('adsenseBannerMid').classList.remove('hidden');
+    }
 
+  } catch(e) {
+    clearInterval(progTimer);
+    credits += inst.cost; updateCreditsDisplay();
+    document.getElementById('processingOverlay').classList.remove('open');
+    showToast(`❌ ${e.message}`, 'error');
+  }
+}
+
+function showResult(inst, blob) {
+  document.getElementById('audioPlayer').src = URL.createObjectURL(blob);
+  document.getElementById('resultTitle').textContent = `${inst.icon} ${inst.name} Version`;
+  document.getElementById('resultPanel').classList.add('visible');
+  document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  showToast(`🎶 ${inst.name} ready! Tap play to listen.`, 'success');
+}
+
+function downloadResult() {
+  if (!resultBlob) return;
+  if (credits < DL_COST) {
+    document.getElementById('noCreditsDesc').textContent = `You need ${DL_COST} credit to download. Watch an ad!`;
+    openModal('noCreditsModal'); return;
+  }
+  credits -= DL_COST; updateCreditsDisplay();
+  const inst = INSTRUMENTS.find(i => i.id === selectedInst);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(resultBlob);
+  a.download = `melody-synth-${inst?.id||'output'}.wav`;
+  a.click();
+  showToast('⬇ Downloading...', 'success');
+}
+
+// ══════════════════════════════════════════════════════
+//  ADS
+// ══════════════════════════════════════════════════════
+function showEarnModal() { openModal('earnModal'); }
+
+function watchAd() {
+  closeModal('earnModal');
+  if (IS_ANDROID && window.Android && typeof window.Android.showRewardedAd === 'function') {
+    window.Android.showRewardedAd(); // Real AdMob rewarded
+  } else {
+    simulateRewardedAd(); // Simulated for web
+  }
+}
+
+window.onAdRewarded = function() {
+  credits += AD_REWARD; updateCreditsDisplay();
+  showToast(`🪙 +${AD_REWARD} credits earned!`, 'success');
+};
+
+function simulateRewardedAd() {
+  adSecs = AD_SECS;
+  const ls=document.getElementById('adLoadingScreen'),
+        cd=document.getElementById('adCountdown'),
+        sb=document.getElementById('adSkipBtn'),
+        an=document.getElementById('adNote'),
+        lt=document.getElementById('adLoadingText');
+  ls.classList.add('open');
+  lt.textContent='Loading ad...'; cd.style.display='none'; sb.style.display='none'; an.style.display='none';
+  setTimeout(() => {
+    lt.textContent='📺 Ad Playing'; cd.style.display='block'; an.style.display='block';
+    cd.textContent = adSecs+'s';
+    adTimer = setInterval(() => {
+      adSecs--; cd.textContent=adSecs+'s';
+      if (adSecs <= AD_SECS-5) sb.style.display='block';
+      if (adSecs <= 0) { clearInterval(adTimer); adEnded(); }
+    }, 1000);
+  }, 1500);
+}
+
+function adEnded() {
+  clearInterval(adTimer);
+  document.getElementById('adLoadingScreen').classList.remove('open');
+  window.onAdRewarded();
+}
+
+// ══════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
+});
+let toastTO;
+function showToast(msg, type) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'');
+  clearTimeout(toastTO);
+  toastTO=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+init();
+</script>
+
+<!--
+╔══════════════════════════════════════════════════════════╗
+║              AD SETUP CHECKLIST                          ║
+╠══════════════════════════════════════════════════════════╣
+║  WEBSITE (AdSense):                                      ║
+║  1. Replace ca-pub-XXXXXXXXXXXXXXXX with your pub ID     ║
+║  2. Replace data-ad-slot="XXXXXXXXXX" with real slots    ║
+║     (create 3 ad units in AdSense dashboard)             ║
+║  3. Upload to GitHub Pages → AdSense auto-detects        ║
+║                                                          ║
+║  ANDROID APP (AdMob):                                    ║
+║  1. Replace AdMob unit IDs in MainActivity.java          ║
+║  2. The app auto-detects Android WebView                 ║
+║  3. AdSense banners are hidden, AdMob banners shown      ║
+║  4. Rewarded ad calls Android.showRewardedAd()           ║
+╚══════════════════════════════════════════════════════════╝
+-->
 </body>
 </html>
