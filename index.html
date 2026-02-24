@@ -1,124 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
   <title>Melody Synth Go</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
-  <!-- ══════════════════════════════════════════════════════
-       ADSENSE — for website version (auto-detected)
-       Replace ca-pub-XXXXXXXXXXXXXXXX with your real pub ID
-  ════════════════════════════════════════════════════════ -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-       crossorigin="anonymous"></script>
+  <!-- ═══════════════════════════════════════════════════
+       ADSENSE — website version
+       Replace ca-pub-XXXXXXXXXXXXXXXX with your real ID
+  ════════════════════════════════════════════════════ -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
   <style>
-    :root {
-      --bg:#0a0a0f; --surface:#13131c; --card:#1c1c2a; --border:#2a2a3d;
-      --accent:#ff4d6d; --gold:#ffc844; --teal:#00e5c3;
-      --text:#f0f0f8; --muted:#6b6b88; --radius:18px;
-      --font-head:'Bebas Neue',sans-serif; --font-body:'DM Sans',sans-serif;
+    :root{
+      --bg:#0a0a0f;--surface:#13131c;--card:#1c1c2a;--border:#2a2a3d;
+      --accent:#ff4d6d;--gold:#ffc844;--teal:#00e5c3;
+      --text:#f0f0f8;--muted:#6b6b88;--radius:18px;
+      --font-head:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
-    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
 
-    /* ── Setup Screen ── */
-    .setup-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;overflow-y:auto}
-    .setup-screen.hidden{display:none}
-    .setup-logo{font-family:var(--font-head);font-size:2.4rem;letter-spacing:3px;background:linear-gradient(120deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-    .setup-sub{color:var(--muted);font-size:0.9rem;margin-bottom:32px}
-    .setup-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:380px;text-align:left}
-    .setup-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--font-head)}
-    .setup-title{font-size:1.15rem;font-weight:700;margin-bottom:6px}
-    .setup-desc{font-size:0.85rem;color:var(--muted);line-height:1.6;margin-bottom:20px}
-    .setup-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
-    .setup-step{display:flex;gap:12px;align-items:flex-start}
-    .step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;font-size:0.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
-    .step-text{font-size:0.85rem;color:var(--muted);line-height:1.5}
-    .step-text a{color:var(--teal);text-decoration:none}
-    .step-text strong{color:var(--text)}
-    .setup-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:0.95rem;font-family:var(--font-body);outline:none;transition:border-color 0.2s;margin-bottom:16px}
-    .setup-input:focus{border-color:var(--teal)}
-    .setup-input::placeholder{color:var(--muted)}
-    .setup-btn{width:100%;background:linear-gradient(135deg,var(--teal),#008f7a);border:none;border-radius:12px;color:#0a0a0f;font-family:var(--font-head);font-size:1.3rem;letter-spacing:2px;padding:16px;cursor:pointer;transition:opacity 0.2s}
-    .setup-btn:disabled{opacity:0.4;cursor:not-allowed}
-    .setup-note{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
-
-    /* ── Header ── */
+    /* Header */
     header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 12px;position:relative;z-index:10}
     .logo{font-family:var(--font-head);font-size:2rem;letter-spacing:2px;background:linear-gradient(120deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .credits-badge{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:8px 16px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:border-color 0.2s}
-    .credits-badge:active{border-color:var(--gold)}
+    .credits-badge{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:8px 16px;font-size:.95rem;font-weight:600;cursor:pointer}
     .credits-count{color:var(--gold)}
     .section-title{font-family:var(--font-head);font-size:1.4rem;letter-spacing:1.5px;color:var(--muted);padding:24px 24px 12px;text-transform:uppercase}
 
-    /* ── Platform Badge ── */
-    .platform-badge{margin:0 16px 8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:0.78rem}
-    .platform-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .platform-dot.web{background:var(--teal);box-shadow:0 0 6px var(--teal)}
-    .platform-dot.app{background:var(--gold);box-shadow:0 0 6px var(--gold)}
-    .platform-label{color:var(--muted);flex:1}
-    .api-change{color:var(--teal);cursor:pointer;text-decoration:underline;font-size:0.78rem}
+    /* Ad containers */
+    .adsense-wrap{margin:0 16px 16px;min-height:90px;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+    .adsense-wrap.hidden{display:none}
+    .admob-wrap{margin:0 16px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;min-height:60px;display:flex;align-items:center;justify-content:center}
+    .admob-wrap.hidden{display:none}
+    .ad-label{font-size:.72rem;color:var(--muted);text-align:center;padding:10px}
 
-    /* ── Ad Containers ── */
-    /* Web AdSense banner */
-    .adsense-banner{margin:0 16px 16px;min-height:90px;border-radius:12px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
-    .adsense-banner.hidden{display:none}
-    /* AdMob banner placeholder (replaced by native view in Android) */
-    .admob-banner{margin:0 16px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:12px;min-height:60px;display:flex;align-items:center;justify-content:center}
-    .admob-banner.hidden{display:none}
-    .ad-placeholder{font-size:0.75rem;color:var(--muted);text-align:center;padding:10px}
+    /* Platform badge */
+    .platform-badge{margin:0 16px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+    .pdot{width:7px;height:7px;border-radius:50%}
+    .pdot.web{background:var(--teal);box-shadow:0 0 5px var(--teal)}
+    .pdot.app{background:var(--gold);box-shadow:0 0 5px var(--gold)}
 
-    /* ── Record Panel ── */
+    /* Record panel */
     .record-panel{margin:0 16px;background:linear-gradient(135deg,#1a0a1e,#0d1a2e);border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px;text-align:center;position:relative;overflow:hidden}
-    .record-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,77,109,0.15) 0%,transparent 70%);pointer-events:none}
-    .record-btn{width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,var(--accent),#c0192f);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;transition:transform 0.15s;position:relative;z-index:1}
-    .record-btn.recording{animation:pulse-ring 1.2s ease-out infinite}
-    .record-btn:active{transform:scale(0.94)}
+    .record-panel::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,77,109,.15) 0%,transparent 70%);pointer-events:none}
+    .record-btn{width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,var(--accent),#c0192f);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;transition:transform .15s;position:relative;z-index:1}
+    .record-btn.recording{animation:pulse 1.2s ease-out infinite}
+    .record-btn:active{transform:scale(.94)}
     .record-btn svg{width:32px;height:32px;fill:white}
-    @keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(255,77,109,0.6)}70%{box-shadow:0 0 0 24px rgba(255,77,109,0)}100%{box-shadow:0 0 0 0 rgba(255,77,109,0)}}
-    .record-label{font-size:0.9rem;color:var(--muted);margin-bottom:8px;position:relative;z-index:1}
-    .record-status{font-size:1.05rem;font-weight:600;color:var(--text);min-height:1.5em;position:relative;z-index:1}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,77,109,.6)}70%{box-shadow:0 0 0 24px rgba(255,77,109,0)}100%{box-shadow:0 0 0 0 rgba(255,77,109,0)}}
+    .record-label{font-size:.9rem;color:var(--muted);margin-bottom:6px;position:relative;z-index:1}
+    .record-status{font-size:1rem;font-weight:600;min-height:1.5em;position:relative;z-index:1}
     .record-status.active{color:var(--accent)}
-    .record-timer{font-family:var(--font-head);font-size:2rem;color:var(--accent);letter-spacing:3px;position:relative;z-index:1;min-height:2.5rem;margin-top:4px}
-    .waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:40px;margin:12px 0 0;position:relative;z-index:1}
-    .wave-bar{width:4px;border-radius:4px;background:var(--accent);opacity:0.4;height:6px}
-    .waveform.active .wave-bar{animation:wave-anim 0.6s ease-in-out infinite alternate;opacity:1}
-    @keyframes wave-anim{0%{height:4px}100%{height:32px}}
-    .wave-bar:nth-child(2){animation-delay:.05s}.wave-bar:nth-child(3){animation-delay:.1s}.wave-bar:nth-child(4){animation-delay:.15s}.wave-bar:nth-child(5){animation-delay:.2s}.wave-bar:nth-child(6){animation-delay:.25s}.wave-bar:nth-child(7){animation-delay:.2s}.wave-bar:nth-child(8){animation-delay:.15s}.wave-bar:nth-child(9){animation-delay:.1s}.wave-bar:nth-child(10){animation-delay:.05s}
-    .record-tips{margin:12px 16px 0;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.15);border-radius:12px;padding:12px 16px;font-size:0.82rem;color:var(--muted);line-height:1.6}
-    .record-tips strong{color:var(--teal)}
+    .record-timer{font-family:var(--font-head);font-size:1.8rem;color:var(--accent);letter-spacing:3px;position:relative;z-index:1;min-height:2.2rem;margin-top:4px}
+    .waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:38px;margin:10px 0 0;position:relative;z-index:1}
+    .wbar{width:4px;border-radius:4px;background:var(--accent);opacity:.4;height:6px}
+    .waveform.active .wbar{animation:wv .6s ease-in-out infinite alternate;opacity:1}
+    @keyframes wv{0%{height:4px}100%{height:30px}}
+    .wbar:nth-child(2){animation-delay:.05s}.wbar:nth-child(3){animation-delay:.1s}.wbar:nth-child(4){animation-delay:.15s}.wbar:nth-child(5){animation-delay:.2s}.wbar:nth-child(6){animation-delay:.25s}.wbar:nth-child(7){animation-delay:.2s}.wbar:nth-child(8){animation-delay:.15s}.wbar:nth-child(9){animation-delay:.1s}.wbar:nth-child(10){animation-delay:.05s}
 
-    /* ── Instrument Grid ── */
+    /* Pitch display */
+    .pitch-display{margin:8px auto 0;background:rgba(0,229,195,.06);border:1px solid rgba(0,229,195,.15);border-radius:10px;padding:10px 16px;font-size:.82rem;color:var(--muted);position:relative;z-index:1;min-height:38px;text-align:center}
+    .pitch-note{font-family:var(--font-head);font-size:1.4rem;color:var(--teal);letter-spacing:2px}
+
+    /* Instruments */
     .instruments-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:0 16px}
     .instrument-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 14px;cursor:pointer;transition:border-color .2s,transform .15s,background .2s;position:relative;overflow:hidden}
     .instrument-card:active{transform:scale(.97)}
     .instrument-card.selected{border-color:var(--teal);background:rgba(0,229,195,.08)}
     .instrument-card.selected::after{content:'✓';position:absolute;top:10px;right:12px;color:var(--teal);font-size:.85rem;font-weight:700}
-    .instrument-icon{font-size:2.2rem;margin-bottom:8px;display:block}
-    .instrument-name{font-weight:600;font-size:.95rem;margin-bottom:2px}
-    .instrument-cost{font-size:.78rem;color:var(--gold)}
+    .inst-icon{font-size:2.2rem;margin-bottom:8px;display:block}
+    .inst-name{font-weight:600;font-size:.95rem;margin-bottom:2px}
+    .inst-cost{font-size:.78rem;color:var(--gold)}
 
-    /* ── Convert ── */
+    /* Convert */
     .convert-wrap{padding:20px 16px}
     .convert-btn{width:100%;background:linear-gradient(135deg,var(--teal),#008f7a);border:none;border-radius:var(--radius);color:#0a0a0f;font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;padding:18px;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:10px}
     .convert-btn:disabled{opacity:.35;cursor:not-allowed}
     .convert-btn:not(:disabled):active{transform:scale(.98)}
 
-    /* ── Result ── */
+    /* Result */
     .result-panel{margin:0 16px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:none}
     .result-panel.visible{display:block}
-    .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
     .result-title{font-family:var(--font-head);font-size:1.3rem;letter-spacing:1px}
     .result-badge{background:rgba(0,229,195,.15);color:var(--teal);border-radius:50px;padding:4px 12px;font-size:.78rem;font-weight:600}
     audio{width:100%;border-radius:8px;margin-bottom:12px;accent-color:var(--teal)}
-    .download-btn{width:100%;padding:13px;border-radius:12px;font-weight:600;font-size:.9rem;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;border:none;background:linear-gradient(135deg,var(--accent),#c0192f);color:white}
-    .download-btn:active{transform:scale(.97)}
+    .dl-btn{width:100%;padding:13px;border-radius:12px;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;border:none;background:linear-gradient(135deg,var(--accent),#c0192f);color:white}
+    .dl-btn:active{transform:scale(.97)}
 
-    /* ── Earn / Ad ── */
+    /* Earn */
     .earn-panel{margin:0 16px 20px;background:linear-gradient(135deg,#0f1a10,#0a1520);border:1px solid #2a3d2a;border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .earn-info{flex:1}
     .earn-title{font-weight:700;font-size:1rem;margin-bottom:4px}
@@ -126,167 +100,131 @@
     .earn-btn{background:linear-gradient(135deg,var(--gold),#e0a800);border:none;border-radius:50px;color:#0a0a0f;font-weight:700;font-size:.9rem;padding:12px 20px;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:6px}
     .earn-btn:active{transform:scale(.95)}
 
-    /* ── Modals ── */
+    /* Modals */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
     .modal-overlay.open{display:flex}
-    .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:360px;text-align:center;animation:modal-in .25s ease}
-    @keyframes modal-in{from{transform:scale(.9) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:360px;text-align:center;animation:min .25s ease}
+    @keyframes min{from{transform:scale(.9) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
     .modal-icon{font-size:3rem;margin-bottom:12px}
     .modal-title{font-family:var(--font-head);font-size:1.6rem;letter-spacing:1.5px;margin-bottom:8px}
     .modal-desc{color:var(--muted);font-size:.9rem;line-height:1.5;margin-bottom:24px}
     .modal-actions{display:flex;flex-direction:column;gap:10px}
-    .modal-btn{width:100%;padding:15px;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;border:none}
-    .modal-btn:active{transform:scale(.97)}
-    .modal-btn-primary{background:linear-gradient(135deg,var(--gold),#e0a800);color:#0a0a0f}
-    .modal-btn-secondary{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+    .mbtn{width:100%;padding:15px;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;border:none}
+    .mbtn:active{transform:scale(.97)}
+    .mbtn-primary{background:linear-gradient(135deg,var(--gold),#e0a800);color:#0a0a0f}
+    .mbtn-secondary{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
 
-    /* ── Ad Loading ── */
+    /* Ad loading / rewarded */
     .ad-loading{position:fixed;inset:0;background:#000;z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px}
     .ad-loading.open{display:flex}
-    .ad-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+    .ad-spin{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .ad-loading-text{color:var(--muted);font-size:.9rem}
-    .ad-countdown{font-family:var(--font-head);font-size:3rem;color:var(--gold);letter-spacing:3px}
-    .ad-skip-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:50px;padding:10px 24px;font-weight:600;font-size:.9rem;cursor:pointer;display:none}
-    .ad-note{font-size:.75rem;color:var(--muted)}
+    .ad-cd{font-family:var(--font-head);font-size:3rem;color:var(--gold);letter-spacing:3px}
+    .ad-skip{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:50px;padding:10px 24px;font-weight:600;font-size:.9rem;cursor:pointer;display:none}
 
-    /* ── Processing ── */
-    .processing-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
-    .processing-overlay.open{display:flex}
-    .processing-ring{width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .9s linear infinite}
-    .processing-text{font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;color:var(--teal)}
-    .processing-sub{font-size:.82rem;color:var(--muted);text-align:center;max-width:260px;line-height:1.5}
-    .processing-progress{width:220px;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
-    .processing-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:4px;width:0%;transition:width .3s}
+    /* Processing */
+    .proc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
+    .proc-overlay.open{display:flex}
+    .proc-ring{width:64px;height:64px;border:4px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .9s linear infinite}
+    .proc-text{font-family:var(--font-head);font-size:1.4rem;letter-spacing:2px;color:var(--teal)}
+    .proc-sub{font-size:.82rem;color:var(--muted);text-align:center;max-width:260px;line-height:1.5}
+    .proc-bar-wrap{width:220px;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+    .proc-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:4px;width:0%;transition:width .2s}
 
-    /* ── Toast ── */
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border);border-radius:50px;padding:12px 24px;font-size:.9rem;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:300;white-space:nowrap;pointer-events:none}
+    /* Toast */
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border);border-radius:50px;padding:12px 24px;font-size:.9rem;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:300;white-space:nowrap;pointer-events:none;max-width:90vw;text-align:center}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .toast.success{border-color:var(--teal);color:var(--teal)}
     .toast.error{border-color:var(--accent);color:var(--accent)}
-    .bottom-spacer{height:40px}
+    .bottom-spacer{height:48px}
   </style>
 </head>
 <body>
 
-<!-- ══ SETUP SCREEN ══ -->
-<div class="setup-screen" id="setupScreen">
-  <div class="setup-logo">🎵 Melody Synth Go</div>
-  <div class="setup-sub">Voice → Instrument AI Converter</div>
-  <div class="setup-card">
-    <div class="setup-label">One-time free setup</div>
-    <div class="setup-title">Connect the AI Engine</div>
-    <div class="setup-desc">Uses Hugging Face's free AI to convert your humming into real instruments. You just need a free API key.</div>
-    <div class="setup-steps">
-      <div class="setup-step">
-        <div class="step-num">1</div>
-        <div class="step-text">Go to <a href="https://huggingface.co/join" target="_blank">huggingface.co/join</a> and create a <strong>free</strong> account</div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">2</div>
-        <div class="step-text">Go to <strong>Settings → Access Tokens → New Token</strong> → pick <strong>Read</strong> → Create</div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">3</div>
-        <div class="step-text">Copy the token (starts with <strong>hf_...</strong>) and paste it below</div>
-      </div>
-    </div>
-    <input type="password" class="setup-input" id="hfKeyInput" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
-    <button class="setup-btn" id="setupBtn" onclick="saveApiKey()" disabled>🚀 Start Converting</button>
-    <div class="setup-note">Your key is saved only on this device. Free tier = ~1,000 conversions/month.</div>
-  </div>
-</div>
-
-<!-- ══ MAIN APP ══ -->
+<!-- ══ HEADER ══ -->
 <header>
   <div class="logo">🎵 Melody Synth</div>
   <div class="credits-badge" onclick="showEarnModal()">
     <span>🪙</span>
     <span class="credits-count" id="creditsDisplay">10</span>
-    <span style="color:var(--muted);font-size:.8rem"> credits</span>
+    <span style="color:var(--muted);font-size:.8rem">&nbsp;credits</span>
   </div>
 </header>
 
 <!-- Platform indicator -->
 <div class="platform-badge">
-  <div class="platform-dot" id="platformDot"></div>
-  <span class="platform-label" id="platformLabel">Detecting platform...</span>
-  <span class="api-change" onclick="resetApiKey()">Change API Key</span>
+  <div class="pdot" id="pdot"></div>
+  <span id="platformLabel">Loading...</span>
 </div>
 
-<!-- ══ TOP AD SLOT ══
-     Auto-switches between AdSense (web) and AdMob (Android)     -->
-
-<!-- WEB: AdSense banner — shown only on browser -->
-<div class="adsense-banner hidden" id="adsenseBannerTop">
-  <ins class="adsbygoogle"
-       style="display:block;width:100%;min-height:90px"
-       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-       data-ad-slot="XXXXXXXXXX"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
+<!-- ══ TOP AD — auto switches AdSense/AdMob ══ -->
+<div class="adsense-wrap hidden" id="adsTop">
+  <ins class="adsbygoogle" style="display:block;width:100%;min-height:90px"
+    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+    data-ad-slot="XXXXXXXXXX"
+    data-ad-format="auto"
+    data-full-width-responsive="true"></ins>
+</div>
+<div class="admob-wrap hidden" id="admobTop">
+  <div class="ad-label">📱 AdMob Banner<br/><small style="opacity:.5">Replace with your AdMob unit ID</small></div>
 </div>
 
-<!-- ANDROID: AdMob banner placeholder — replaced by native AdView -->
-<div class="admob-banner hidden" id="admobBannerTop">
-  <div class="ad-placeholder">📱 AdMob Banner<br/><small style="opacity:.5">ca-app-pub-XXXXXXXX/XXXXXXXX</small></div>
-</div>
-
-<!-- Record -->
+<!-- ══ RECORD ══ -->
 <div class="section-title">Record Your Voice</div>
 <div class="record-panel">
   <button class="record-btn" id="recordBtn" onclick="toggleRecord()">
-    <svg id="micIcon" viewBox="0 0 24 24"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/></svg>
+    <svg id="micIcon" viewBox="0 0 24 24">
+      <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/>
+    </svg>
   </button>
-  <div class="record-label">Tap to start recording</div>
+  <div class="record-label">Tap to start recording your melody</div>
   <div class="record-status" id="recordStatus">Ready</div>
   <div class="record-timer" id="recordTimer"></div>
   <div class="waveform" id="waveform">
-    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div>
+    <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+    <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+    <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+    <div class="wbar"></div>
+  </div>
+  <div class="pitch-display" id="pitchDisplay">
+    Hum a melody — notes will appear here 🎵
   </div>
 </div>
-<div class="record-tips" id="recordTips" style="display:none">
-  💡 <strong>Tips:</strong> Hum or sing clearly for 3–10 seconds. Avoid background noise. The AI will recreate your melody as the chosen instrument.
-</div>
 
-<!-- Instruments -->
+<!-- ══ INSTRUMENTS ══ -->
 <div class="section-title">Choose Instrument</div>
 <div class="instruments-grid" id="instrumentsGrid"></div>
 
-<!-- Convert -->
+<!-- ══ CONVERT ══ -->
 <div class="convert-wrap">
   <button class="convert-btn" id="convertBtn" onclick="startConvert()" disabled>
     ⚡ CONVERT — <span id="convertCostLabel">2 🪙</span>
   </button>
 </div>
 
-<!-- ══ MID AD SLOT (between convert and result) ══ -->
-<div class="adsense-banner hidden" id="adsenseBannerMid" style="margin-bottom:0">
-  <ins class="adsbygoogle"
-       style="display:block;width:100%;min-height:90px"
-       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-       data-ad-slot="XXXXXXXXXX"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
+<!-- ══ MID AD ══ -->
+<div class="adsense-wrap hidden" id="adsMid">
+  <ins class="adsbygoogle" style="display:block;width:100%;min-height:90px"
+    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+    data-ad-slot="XXXXXXXXXX"
+    data-ad-format="auto"
+    data-full-width-responsive="true"></ins>
 </div>
-<div class="admob-banner hidden" id="admobBannerMid" style="margin-bottom:0">
-  <div class="ad-placeholder">📱 AdMob Mid Banner</div>
+<div class="admob-wrap hidden" id="admobMid">
+  <div class="ad-label">📱 AdMob Mid Banner</div>
 </div>
 
-<!-- Result -->
+<!-- ══ RESULT ══ -->
 <div class="result-panel" id="resultPanel">
   <div class="result-header">
     <div class="result-title" id="resultTitle">Piano Version</div>
     <div class="result-badge">✓ Ready</div>
   </div>
-  <audio id="audioPlayer" controls style="width:100%;border-radius:8px;margin-bottom:12px;accent-color:var(--teal)"></audio>
-  <button class="download-btn" onclick="downloadResult()">⬇ Download — 1 🪙</button>
+  <audio id="audioPlayer" controls></audio>
+  <button class="dl-btn" onclick="downloadResult()">⬇ Download — 1 🪙</button>
 </div>
 
-<!-- Earn Credits -->
+<!-- ══ EARN CREDITS ══ -->
 <div class="section-title">Earn Free Credits</div>
 <div class="earn-panel">
   <div class="earn-info">
@@ -296,17 +234,16 @@
   <button class="earn-btn" onclick="showEarnModal()">🎬 Watch Ad</button>
 </div>
 
-<!-- ══ BOTTOM AD SLOT ══ -->
-<div class="adsense-banner hidden" id="adsenseBannerBottom">
-  <ins class="adsbygoogle"
-       style="display:block;width:100%;min-height:90px"
-       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-       data-ad-slot="XXXXXXXXXX"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
+<!-- ══ BOTTOM AD ══ -->
+<div class="adsense-wrap hidden" id="adsBottom">
+  <ins class="adsbygoogle" style="display:block;width:100%;min-height:90px"
+    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+    data-ad-slot="XXXXXXXXXX"
+    data-ad-format="auto"
+    data-full-width-responsive="true"></ins>
 </div>
-<div class="admob-banner hidden" id="admobBannerBottom">
-  <div class="ad-placeholder">📱 AdMob Bottom Banner</div>
+<div class="admob-wrap hidden" id="admobBottom">
+  <div class="ad-label">📱 AdMob Bottom Banner</div>
 </div>
 
 <div class="bottom-spacer"></div>
@@ -316,10 +253,10 @@
   <div class="modal">
     <div class="modal-icon">🎬</div>
     <div class="modal-title">Watch & Earn</div>
-    <div class="modal-desc">Watch a short ad to earn <strong style="color:var(--gold)">+5 credits</strong> instantly.</div>
+    <div class="modal-desc">Watch a short ad to earn <strong style="color:var(--gold)">+5 credits</strong> instantly. No signup needed!</div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-primary" onclick="watchAd()">🪙 Watch Ad (+5 credits)</button>
-      <button class="modal-btn modal-btn-secondary" onclick="closeModal('earnModal')">Maybe later</button>
+      <button class="mbtn mbtn-primary" onclick="watchAd()">🪙 Watch Ad (+5 credits)</button>
+      <button class="mbtn mbtn-secondary" onclick="closeModal('earnModal')">Maybe later</button>
     </div>
   </div>
 </div>
@@ -331,313 +268,578 @@
     <div class="modal-title">Not Enough Credits</div>
     <div class="modal-desc" id="noCreditsDesc">Watch a short ad to earn free credits!</div>
     <div class="modal-actions">
-      <button class="modal-btn modal-btn-primary" onclick="closeModal('noCreditsModal');showEarnModal()">🎬 Watch Ad & Earn</button>
-      <button class="modal-btn modal-btn-secondary" onclick="closeModal('noCreditsModal')">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="closeModal('noCreditsModal');showEarnModal()">🎬 Watch Ad & Earn</button>
+      <button class="mbtn mbtn-secondary" onclick="closeModal('noCreditsModal')">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Simulated Ad Screen (web rewarded) -->
-<div class="ad-loading" id="adLoadingScreen">
-  <div class="ad-spinner"></div>
-  <div class="ad-loading-text" id="adLoadingText">Loading ad...</div>
-  <div class="ad-countdown" id="adCountdown" style="display:none"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:20px">
-    <button class="ad-skip-btn" id="adSkipBtn" onclick="adEnded()">Skip Ad ›</button>
-    <div class="ad-note" id="adNote" style="display:none">Earn credits when ad completes.</div>
+<!-- Rewarded Ad Screen -->
+<div class="ad-loading" id="adScreen">
+  <div class="ad-spin"></div>
+  <div id="adText" style="color:var(--muted);font-size:.9rem">Loading ad...</div>
+  <div class="ad-cd" id="adCd" style="display:none"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:16px">
+    <button class="ad-skip" id="adSkip" onclick="adDone()">Skip Ad ›</button>
+    <div style="font-size:.72rem;color:var(--muted)" id="adNote" style="display:none">Credits earned when ad completes.</div>
   </div>
 </div>
 
 <!-- Processing -->
-<div class="processing-overlay" id="processingOverlay">
-  <div class="processing-ring"></div>
-  <div class="processing-text">CONVERTING...</div>
-  <div class="processing-sub" id="processingInstrument">Sending to AI...</div>
-  <div class="processing-progress"><div class="processing-bar" id="processingBar"></div></div>
+<div class="proc-overlay" id="procOverlay">
+  <div class="proc-ring"></div>
+  <div class="proc-text">CONVERTING...</div>
+  <div class="proc-sub" id="procSub">Analyzing your melody...</div>
+  <div class="proc-bar-wrap"><div class="proc-bar" id="procBar"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  PLATFORM DETECTION
-//  Detects whether running in Android WebView or browser
-// ══════════════════════════════════════════════════════
-const IS_ANDROID = typeof window.Android !== 'undefined' ||
-                   /wv|WebView/.test(navigator.userAgent) ||
-                   (typeof window.Android === 'object');
+// ════════════════════════════════════════════════════════════
+const IS_ANDROID = typeof window.Android !== 'undefined' || /wv|WebView/.test(navigator.userAgent);
 
 function setupPlatform() {
-  const dot   = document.getElementById('platformDot');
-  const label = document.getElementById('platformLabel');
-
+  const dot = document.getElementById('pdot');
+  const lbl = document.getElementById('platformLabel');
   if (IS_ANDROID) {
-    // ── ANDROID: show AdMob banners, hide AdSense ──
     dot.classList.add('app');
-    label.textContent = '📱 Android App — AdMob Active';
-    ['adsenseBannerTop','adsenseBannerMid','adsenseBannerBottom'].forEach(id => {
-      document.getElementById(id).classList.add('hidden');
-    });
-    ['admobBannerTop','admobBannerMid','admobBannerBottom'].forEach(id => {
-      document.getElementById(id).classList.remove('hidden');
-    });
+    lbl.textContent = '📱 Android App — AdMob Active';
+    ['adsTop','adsMid','adsBottom'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    ['admobTop','admobMid','admobBottom'].forEach(id => document.getElementById(id).classList.remove('hidden'));
   } else {
-    // ── WEB BROWSER: show AdSense banners, hide AdMob ──
     dot.classList.add('web');
-    label.textContent = '🌐 Web Version — AdSense Active';
-    ['admobBannerTop','admobBannerMid','admobBannerBottom'].forEach(id => {
-      document.getElementById(id).classList.add('hidden');
-    });
-    ['adsenseBannerTop','adsenseBannerMid','adsenseBannerBottom'].forEach(id => {
+    lbl.textContent = '🌐 Web Version — AdSense Active';
+    ['admobTop','admobMid','admobBottom'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    ['adsTop','adsBottom'].forEach(id => {
       document.getElementById(id).classList.remove('hidden');
+      try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
     });
-    // Push AdSense ads
-    try {
-      (adsbygoogle = window.adsbygoogle || []).push({});
-      (adsbygoogle = window.adsbygoogle || []).push({});
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    } catch(e) {}
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  INSTRUMENTS CONFIG
+// ════════════════════════════════════════════════════════════
 const INSTRUMENTS = [
-  { id:'piano',   name:'Piano',   icon:'🎹', cost:2, prompt:'acoustic piano melody, solo piano, classical music, high quality' },
-  { id:'guitar',  name:'Guitar',  icon:'🎸', cost:2, prompt:'acoustic guitar fingerpicking, guitar melody, warm tone' },
-  { id:'violin',  name:'Violin',  icon:'🎻', cost:3, prompt:'solo violin, orchestral strings, legato violin melody' },
-  { id:'flute',   name:'Flute',   icon:'🪈', cost:2, prompt:'flute solo, breathy flute melody, woodwind instrument' },
-  { id:'trumpet', name:'Trumpet', icon:'🎺', cost:3, prompt:'solo trumpet, jazz trumpet, bright brass melody' },
-  { id:'drums',   name:'Drums',   icon:'🥁', cost:2, prompt:'drum kit, percussion rhythm, steady beat pattern' },
-  { id:'synth',   name:'Synth',   icon:'🎛️', cost:4, prompt:'synthesizer lead, electronic synth melody, lush synth' },
-  { id:'bass',    name:'Bass',    icon:'🎸', cost:3, prompt:'bass guitar melody, deep bass line, groovy bass' },
+  { id:'piano',    name:'Piano',    icon:'🎹', cost:2,
+    type:'sine',    attack:.01, decay:.3,  sustain:.4, release:.8,  vibrato:0,    harmonics:[1,0.5,0.25,0.1] },
+  { id:'guitar',   name:'Guitar',   icon:'🎸', cost:2,
+    type:'sawtooth',attack:.005,decay:.4,  sustain:.2, release:.6,  vibrato:0,    harmonics:[1,0.6,0.3,0.15,0.05] },
+  { id:'violin',   name:'Violin',   icon:'🎻', cost:3,
+    type:'sawtooth',attack:.08, decay:.1,  sustain:.8, release:.4,  vibrato:5.5,  harmonics:[1,0.8,0.5,0.3,0.1] },
+  { id:'flute',    name:'Flute',    icon:'🪈', cost:2,
+    type:'sine',    attack:.06, decay:.05, sustain:.9, release:.3,  vibrato:5,    harmonics:[1,0.3,0.05] },
+  { id:'trumpet',  name:'Trumpet',  icon:'🎺', cost:3,
+    type:'square',  attack:.02, decay:.1,  sustain:.7, release:.2,  vibrato:4,    harmonics:[1,0.9,0.7,0.5,0.3,0.1] },
+  { id:'drums',    name:'Drums',    icon:'🥁', cost:2,
+    type:'noise',   attack:.001,decay:.15, sustain:.0, release:.2,  vibrato:0,    harmonics:[] },
+  { id:'synth',    name:'Synth',    icon:'🎛️', cost:4,
+    type:'square',  attack:.02, decay:.2,  sustain:.6, release:.5,  vibrato:3,    harmonics:[1,0.5,0.25] },
+  { id:'bass',     name:'Bass',     icon:'🎸', cost:3,
+    type:'sawtooth',attack:.01, decay:.5,  sustain:.3, release:.4,  vibrato:0,    harmonics:[1,0.7,0.2] },
 ];
 
-const HF_MODEL  = 'facebook/musicgen-small';
-const HF_API    = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
+const DL_COST   = 1;
 const AD_REWARD = 5;
 const AD_SECS   = 15;
-const DL_COST   = 1;
 
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  STATE
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 let credits      = parseInt(localStorage.getItem('msg_credits') || '10');
-let hfKey        = localStorage.getItem('msg_hf_key') || '';
-let isRecording  = false;
-let hasRecording = false;
 let selectedInst = null;
-let mediaRecorder= null;
-let audioChunks  = [];
-let recordedBlob = null;
+let detectedNotes= [];   // [{freq, time, duration}]
 let resultBlob   = null;
+let audioCtx     = null;
+let analyser     = null;
+let mediaStream  = null;
+let recordingActive = false;
 let recordTimer  = null;
 let recordSecs   = 0;
+let pitchTimer   = null;
 let adTimer      = null;
 let adSecs       = 0;
+let noteHistory  = [];   // raw detected frequencies during recording
 
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function init() {
   setupPlatform();
   renderInstruments();
-  updateCreditsDisplay();
-  if (!hfKey) {
-    document.getElementById('setupScreen').classList.remove('hidden');
-  } else {
-    document.getElementById('setupScreen').classList.add('hidden');
-  }
-  document.getElementById('hfKeyInput').addEventListener('input', function() {
-    document.getElementById('setupBtn').disabled = this.value.trim().length < 10;
-  });
+  updateCredits();
 }
 
 function renderInstruments() {
   document.getElementById('instrumentsGrid').innerHTML = INSTRUMENTS.map(i => `
-    <div class="instrument-card" id="inst-${i.id}" onclick="selectInstrument('${i.id}')">
-      <span class="instrument-icon">${i.icon}</span>
-      <div class="instrument-name">${i.name}</div>
-      <div class="instrument-cost">🪙 ${i.cost} credits</div>
+    <div class="instrument-card" id="inst-${i.id}" onclick="selectInst('${i.id}')">
+      <span class="inst-icon">${i.icon}</span>
+      <div class="inst-name">${i.name}</div>
+      <div class="inst-cost">🪙 ${i.cost} credits</div>
     </div>`).join('');
 }
 
-function updateCreditsDisplay() {
+function updateCredits() {
   document.getElementById('creditsDisplay').textContent = credits;
   localStorage.setItem('msg_credits', credits);
 }
 
-// ══════════════════════════════════════════════════════
-//  API KEY
-// ══════════════════════════════════════════════════════
-function saveApiKey() {
-  const key = document.getElementById('hfKeyInput').value.trim();
-  if (!key) return;
-  hfKey = key;
-  localStorage.setItem('msg_hf_key', key);
-  document.getElementById('setupScreen').classList.add('hidden');
-  showToast('🎉 AI Engine connected!', 'success');
-}
-function resetApiKey() {
-  localStorage.removeItem('msg_hf_key');
-  hfKey = '';
-  document.getElementById('hfKeyInput').value = '';
-  document.getElementById('setupScreen').classList.remove('hidden');
+// ════════════════════════════════════════════════════════════
+//  NOTE / PITCH DETECTION HELPERS
+// ════════════════════════════════════════════════════════════
+
+// Convert frequency to nearest musical note name
+function freqToNote(freq) {
+  if (!freq || freq < 60) return null;
+  const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const n = 12 * Math.log2(freq / 440) + 69;
+  const rounded = Math.round(n);
+  const name = noteNames[((rounded % 12) + 12) % 12];
+  const octave = Math.floor(rounded / 12) - 1;
+  return { name: `${name}${octave}`, midi: rounded, freq };
 }
 
-// ══════════════════════════════════════════════════════
+// YIN-lite pitch detection from buffer
+function detectPitch(buffer, sampleRate) {
+  const bufLen = buffer.length;
+  const yinLen = Math.floor(bufLen / 2);
+  const yin = new Float32Array(yinLen);
+
+  // Difference function
+  for (let tau = 1; tau < yinLen; tau++) {
+    let sum = 0;
+    for (let i = 0; i < yinLen; i++) {
+      const diff = buffer[i] - buffer[i + tau];
+      sum += diff * diff;
+    }
+    yin[tau] = sum;
+  }
+
+  // Cumulative mean normalisation
+  yin[0] = 1;
+  let runSum = 0;
+  for (let tau = 1; tau < yinLen; tau++) {
+    runSum += yin[tau];
+    yin[tau] = (runSum === 0) ? 0 : yin[tau] * tau / runSum;
+  }
+
+  // Absolute threshold
+  const threshold = 0.15;
+  let tauEstimate = -1;
+  for (let tau = 2; tau < yinLen; tau++) {
+    if (yin[tau] < threshold) {
+      while (tau + 1 < yinLen && yin[tau + 1] < yin[tau]) tau++;
+      tauEstimate = tau;
+      break;
+    }
+  }
+
+  if (tauEstimate === -1) return null;
+
+  // Parabolic interpolation
+  const x0 = tauEstimate > 0 ? tauEstimate - 1 : tauEstimate;
+  const x2 = tauEstimate + 1 < yinLen ? tauEstimate + 1 : tauEstimate;
+  let betterTau;
+  if (x0 === tauEstimate) {
+    betterTau = yin[tauEstimate] <= yin[x2] ? tauEstimate : x2;
+  } else if (x2 === tauEstimate) {
+    betterTau = yin[tauEstimate] <= yin[x0] ? tauEstimate : x0;
+  } else {
+    const s0 = yin[x0], s1 = yin[tauEstimate], s2 = yin[x2];
+    betterTau = tauEstimate + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+  }
+
+  return sampleRate / betterTau;
+}
+
+// Group raw note history into clean note sequence with durations
+function buildNoteSequence(history, sampleRate) {
+  if (history.length === 0) return [];
+  const hopSize = 512;
+  const hopMs   = (hopSize / sampleRate) * 1000;
+
+  // Smooth: median filter over 5-frame window
+  const smoothed = history.map((f, i) => {
+    const win = history.slice(Math.max(0, i-2), i+3).filter(Boolean);
+    if (!win.length) return null;
+    win.sort((a,b) => a-b);
+    return win[Math.floor(win.length/2)];
+  });
+
+  const notes = [];
+  let cur = null, startMs = 0, count = 0;
+
+  smoothed.forEach((freq, idx) => {
+    const note = freq ? freqToNote(freq) : null;
+    if (note && cur && note.name === cur.name) {
+      count++;
+    } else {
+      if (cur && count > 2) { // min ~3 frames = ~32ms
+        notes.push({ freq: cur.freq, name: cur.name, midi: cur.midi, startMs, durationMs: count * hopMs });
+      }
+      cur = note; startMs = idx * hopMs; count = 1;
+    }
+  });
+  if (cur && count > 2) notes.push({ freq: cur.freq, name: cur.name, midi: cur.midi, startMs, durationMs: count * hopMs });
+
+  // Filter very short notes (< 80ms)
+  return notes.filter(n => n.durationMs >= 80);
+}
+
+// ════════════════════════════════════════════════════════════
 //  RECORDING
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 async function toggleRecord() {
-  if (isRecording) { stopRecord(); return; }
+  if (recordingActive) { stopRecording(); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
-    startRecord(stream);
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    startRecording();
   } catch(e) {
-    showToast('❌ Microphone access denied. Allow mic in settings.', 'error');
+    showToast('❌ Microphone access denied. Allow mic in your browser settings.', 'error');
   }
 }
 
-function startRecord(stream) {
-  audioChunks = []; recordedBlob = null;
-  isRecording = true; recordSecs = 0;
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-  mediaRecorder.onstop = () => {
-    recordedBlob = new Blob(audioChunks, { type:'audio/webm' });
-    stream.getTracks().forEach(t => t.stop());
-    hasRecording = true;
-    checkConvertReady();
-    document.getElementById('recordStatus').textContent = `✓ Saved (${recordSecs}s) — tap to re-record`;
-    document.getElementById('recordTips').style.display = 'block';
-    showToast('✅ Recording saved! Now pick an instrument.', 'success');
-  };
-  mediaRecorder.start();
+function startRecording() {
+  recordingActive = true;
+  recordSecs = 0;
+  noteHistory = [];
+  detectedNotes = [];
+
+  // Audio context for pitch detection
+  audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+  const src = audioCtx.createMediaStreamSource(mediaStream);
+  analyser  = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  src.connect(analyser);
+
+  // UI
   document.getElementById('recordBtn').classList.add('recording');
   document.getElementById('recordStatus').textContent = 'Recording... tap again to stop';
   document.getElementById('recordStatus').classList.add('active');
   document.getElementById('waveform').classList.add('active');
   document.getElementById('micIcon').innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
+  document.getElementById('pitchDisplay').innerHTML = 'Listening for melody...';
+
+  // Timer display
   recordTimer = setInterval(() => {
     recordSecs++;
     const m = String(Math.floor(recordSecs/60)).padStart(2,'0');
     const s = String(recordSecs%60).padStart(2,'0');
     document.getElementById('recordTimer').textContent = `${m}:${s}`;
-    if (recordSecs >= 30) stopRecord();
+    if (recordSecs >= 30) stopRecording();
   }, 1000);
+
+  // Pitch detection loop (~every 50ms)
+  const buf = new Float32Array(analyser.fftSize);
+  pitchTimer = setInterval(() => {
+    analyser.getFloatTimeDomainData(buf);
+
+    // Check if there's signal (not silence)
+    const rms = Math.sqrt(buf.reduce((s,v) => s + v*v, 0) / buf.length);
+    if (rms < 0.01) { noteHistory.push(null); return; }
+
+    const freq = detectPitch(buf, audioCtx.sampleRate);
+    noteHistory.push(freq && freq > 60 && freq < 2000 ? freq : null);
+
+    // Show live note
+    if (freq && freq > 60) {
+      const note = freqToNote(freq);
+      if (note) {
+        document.getElementById('pitchDisplay').innerHTML =
+          `<span class="pitch-note">${note.name}</span> &nbsp; <span style="color:var(--muted);font-size:.75rem">${Math.round(freq)}Hz</span>`;
+      }
+    }
+  }, 50);
+
+  showToast('🎙️ Recording started — hum your melody!', '');
 }
 
-function stopRecord() {
-  if (!isRecording) return;
-  isRecording = false;
+function stopRecording() {
+  if (!recordingActive) return;
+  recordingActive = false;
   clearInterval(recordTimer);
+  clearInterval(pitchTimer);
+
   document.getElementById('recordTimer').textContent = '';
   document.getElementById('recordBtn').classList.remove('recording');
   document.getElementById('recordStatus').classList.remove('active');
   document.getElementById('waveform').classList.remove('active');
   document.getElementById('micIcon').innerHTML = '<path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm7 10a1 1 0 0 1 2 0 9 9 0 0 1-8 8.94V21h2a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2h2v-1.06A9 9 0 0 1 3 11a1 1 0 0 1 2 0 7 7 0 0 0 14 0z"/>';
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); }
+  if (audioCtx)    { audioCtx.close(); }
+
+  // Build note sequence from raw pitch history
+  detectedNotes = buildNoteSequence(noteHistory, 44100);
+
+  if (detectedNotes.length === 0) {
+    document.getElementById('recordStatus').textContent = 'No melody detected — try again louder';
+    document.getElementById('pitchDisplay').innerHTML = 'Try humming closer to the microphone 🎤';
+    showToast('⚠️ No notes detected. Try humming louder.', 'error');
+    return;
+  }
+
+  const noteList = [...new Set(detectedNotes.map(n => n.name))].join(' · ');
+  document.getElementById('recordStatus').textContent = `✓ Melody captured (${detectedNotes.length} notes)`;
+  document.getElementById('pitchDisplay').innerHTML =
+    `<span style="color:var(--teal);font-size:.8rem">Detected: </span> ${noteList}`;
+
+  checkReady();
+  showToast(`✅ ${detectedNotes.length} notes captured! Now pick an instrument.`, 'success');
 }
 
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  INSTRUMENT SELECT
-// ══════════════════════════════════════════════════════
-function selectInstrument(id) {
+// ════════════════════════════════════════════════════════════
+function selectInst(id) {
   if (selectedInst) document.getElementById('inst-'+selectedInst).classList.remove('selected');
   selectedInst = id;
   document.getElementById('inst-'+id).classList.add('selected');
   const inst = INSTRUMENTS.find(i => i.id === id);
   document.getElementById('convertCostLabel').textContent = `${inst.cost} 🪙`;
-  checkConvertReady();
+  checkReady();
 }
-function checkConvertReady() {
-  document.getElementById('convertBtn').disabled = !(hasRecording && selectedInst);
+function checkReady() {
+  document.getElementById('convertBtn').disabled = !(detectedNotes.length > 0 && selectedInst);
 }
 
-// ══════════════════════════════════════════════════════
-//  CONVERT — Hugging Face MusicGen
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  CONVERT — Web Audio synthesis (no API, works offline)
+// ════════════════════════════════════════════════════════════
 async function startConvert() {
-  if (!hasRecording || !selectedInst) return;
+  if (!detectedNotes.length || !selectedInst) return;
   const inst = INSTRUMENTS.find(i => i.id === selectedInst);
+
   if (credits < inst.cost) {
     document.getElementById('noCreditsDesc').textContent =
-      `You need ${inst.cost} credits for ${inst.name}. Watch an ad for free credits!`;
+      `You need ${inst.cost} credits for ${inst.name}. Watch an ad to earn free credits!`;
     openModal('noCreditsModal'); return;
   }
-  credits -= inst.cost;
-  updateCreditsDisplay();
-  document.getElementById('processingInstrument').textContent = `Creating ${inst.name} version with AI...`;
-  document.getElementById('processingBar').style.width = '0%';
-  document.getElementById('processingOverlay').classList.add('open');
 
-  let prog = 0;
-  const progTimer = setInterval(() => {
-    prog = Math.min(prog + Math.random() * 5, 88);
-    document.getElementById('processingBar').style.width = prog + '%';
-  }, 800);
+  credits -= inst.cost;
+  updateCredits();
+
+  document.getElementById('procSub').textContent = `Synthesizing ${inst.name} version...`;
+  document.getElementById('procBar').style.width = '0%';
+  document.getElementById('procOverlay').classList.add('open');
+
+  // Small delay so the UI updates before heavy audio work
+  await new Promise(r => setTimeout(r, 80));
 
   try {
-    const res = await fetch(HF_API, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${hfKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        inputs: `${inst.prompt}, melodic short phrase, studio quality`,
-        parameters: { max_new_tokens: 256, do_sample: true, guidance_scale: 3 }
-      })
-    });
-    clearInterval(progTimer);
-
-    if (res.status === 503) {
-      credits += inst.cost; updateCreditsDisplay();
-      document.getElementById('processingOverlay').classList.remove('open');
-      showToast('⏳ AI warming up — credits refunded, try again in 20s!', 'error');
-      return;
-    }
-    if (res.status === 401) {
-      credits += inst.cost; updateCreditsDisplay();
-      document.getElementById('processingOverlay').classList.remove('open');
-      showToast('❌ Invalid API key. Please update it.', 'error');
-      resetApiKey(); return;
-    }
-    if (res.status === 429) {
-      credits += inst.cost; updateCreditsDisplay();
-      document.getElementById('processingOverlay').classList.remove('open');
-      showToast('⏳ Rate limit hit. Wait 1 minute and try again.', 'error');
-      return;
-    }
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Error ${res.status}`);
-    }
-
-    const blob = await res.blob();
+    const blob = await synthesizeMelody(detectedNotes, inst);
     resultBlob = blob;
-    document.getElementById('processingBar').style.width = '100%';
-    await new Promise(r => setTimeout(r, 300));
-    document.getElementById('processingOverlay').classList.remove('open');
+
+    document.getElementById('procBar').style.width = '100%';
+    await new Promise(r => setTimeout(r, 200));
+    document.getElementById('procOverlay').classList.remove('open');
+
     showResult(inst, blob);
 
-    // Show mid ad after successful conversion (web only)
+    // Show mid AdSense after conversion on web
     if (!IS_ANDROID) {
-      document.getElementById('adsenseBannerMid').classList.remove('hidden');
+      const mid = document.getElementById('adsMid');
+      if (mid.classList.contains('hidden')) {
+        mid.classList.remove('hidden');
+        try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+      }
+    } else {
+      document.getElementById('admobMid').classList.remove('hidden');
     }
 
   } catch(e) {
-    clearInterval(progTimer);
-    credits += inst.cost; updateCreditsDisplay();
-    document.getElementById('processingOverlay').classList.remove('open');
-    showToast(`❌ ${e.message}`, 'error');
+    credits += inst.cost; updateCredits();
+    document.getElementById('procOverlay').classList.remove('open');
+    showToast(`❌ Error: ${e.message}`, 'error');
   }
 }
 
+// ════════════════════════════════════════════════════════════
+//  SYNTHESIZE MELODY — pure Web Audio, returns audio Blob
+// ════════════════════════════════════════════════════════════
+async function synthesizeMelody(notes, inst) {
+  const sampleRate = 44100;
+  // Total duration = last note end + 1s tail
+  const lastNote   = notes[notes.length - 1];
+  const totalSec   = (lastNote.startMs + lastNote.durationMs) / 1000 + 1.0;
+  const totalSamps = Math.ceil(totalSec * sampleRate);
+
+  const offCtx    = new OfflineAudioContext(2, totalSamps, sampleRate);
+  const masterGain= offCtx.createGain();
+  masterGain.gain.value = 0.7;
+
+  // Reverb convolver for realism
+  const reverb = offCtx.createConvolver();
+  reverb.buffer = makeImpulse(offCtx, 1.5, 2.5);
+  const dryGain = offCtx.createGain(); dryGain.gain.value = 0.75;
+  const wetGain = offCtx.createGain(); wetGain.gain.value = 0.25;
+
+  masterGain.connect(dryGain);  dryGain.connect(offCtx.destination);
+  masterGain.connect(reverb);   reverb.connect(wetGain); wetGain.connect(offCtx.destination);
+
+  let progStep = 0;
+  for (const note of notes) {
+    progStep++;
+    document.getElementById('procBar').style.width = (progStep / notes.length * 90) + '%';
+
+    const startSec    = note.startMs / 1000;
+    const durSec      = Math.max(note.durationMs / 1000, 0.08);
+    const freq        = note.freq;
+
+    if (inst.type === 'noise') {
+      // Drums: short noise burst
+      synthNoise(offCtx, masterGain, startSec, 0.18, freq);
+    } else {
+      synthNote(offCtx, masterGain, freq, startSec, durSec, inst);
+    }
+  }
+
+  const rendered  = await offCtx.startRendering();
+  return audioBufferToWav(rendered);
+}
+
+// Synthesize a single pitched note
+function synthNote(ctx, dest, freq, startSec, durSec, inst) {
+  const gainNode = ctx.createGain();
+
+  // Build oscillator for each harmonic
+  inst.harmonics.forEach((amp, hIdx) => {
+    if (amp < 0.01) return;
+    const osc = ctx.createOscillator();
+    osc.type = inst.type === 'noise' ? 'sine' : inst.type;
+    osc.frequency.value = freq * (hIdx + 1);
+
+    const hGain = ctx.createGain();
+    hGain.gain.value = amp * (hIdx === 0 ? 1 : 0.5);
+    osc.connect(hGain);
+    hGain.connect(gainNode);
+    osc.start(startSec);
+    osc.stop(startSec + durSec + inst.release + 0.05);
+  });
+
+  // Vibrato
+  if (inst.vibrato > 0) {
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = inst.vibrato;
+    lfoGain.gain.value  = 3; // cents depth
+    lfo.connect(lfoGain);
+    // We'd need AudioParam modulation — simpler: skip for now
+    lfo.start(startSec + 0.1);
+    lfo.stop(startSec + durSec + inst.release);
+  }
+
+  // ADSR envelope
+  const g = gainNode.gain;
+  const t = startSec;
+  g.setValueAtTime(0, t);
+  g.linearRampToValueAtTime(0.8, t + inst.attack);
+  g.linearRampToValueAtTime(0.8 * inst.sustain, t + inst.attack + inst.decay);
+  g.setValueAtTime(0.8 * inst.sustain, t + durSec - 0.01);
+  g.linearRampToValueAtTime(0, t + durSec + inst.release);
+
+  gainNode.connect(dest);
+}
+
+// Synthesize a drum hit
+function synthNoise(ctx, dest, startSec, durSec, freq) {
+  const bufSize = Math.ceil(ctx.sampleRate * durSec);
+  const buf     = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data    = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+
+  // Pitch the noise with a bandpass filter
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = freq || 200;
+  filter.Q.value = 0.8;
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.9, startSec);
+  g.gain.exponentialRampToValueAtTime(0.001, startSec + durSec);
+
+  src.connect(filter);
+  filter.connect(g);
+  g.connect(dest);
+  src.start(startSec);
+  src.stop(startSec + durSec + 0.05);
+}
+
+// Generate a simple reverb impulse response
+function makeImpulse(ctx, duration, decay) {
+  const len  = Math.ceil(ctx.sampleRate * duration);
+  const buf  = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+  }
+  return buf;
+}
+
+// ════════════════════════════════════════════════════════════
+//  AudioBuffer → WAV Blob  (PCM 16-bit stereo)
+// ════════════════════════════════════════════════════════════
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate  = buffer.sampleRate;
+  const numSamples  = buffer.length;
+  const bytesPerSample = 2;
+  const blockAlign  = numChannels * bytesPerSample;
+  const byteRate    = sampleRate * blockAlign;
+  const dataSize    = numSamples * blockAlign;
+  const arrayBuf    = new ArrayBuffer(44 + dataSize);
+  const view        = new DataView(arrayBuf);
+
+  // RIFF header
+  writeStr(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(view, 8, 'WAVE');
+  writeStr(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);           // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);          // bits per sample
+  writeStr(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  // Interleave channels
+  let offset = 44;
+  for (let i = 0; i < numSamples; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(c)[i]));
+      view.setInt16(offset, sample < 0 ? sample * 32768 : sample * 32767, true);
+      offset += 2;
+    }
+  }
+
+  return new Blob([arrayBuf], { type: 'audio/wav' });
+}
+
+function writeStr(view, offset, str) {
+  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+}
+
+// ════════════════════════════════════════════════════════════
+//  RESULT + DOWNLOAD
+// ════════════════════════════════════════════════════════════
 function showResult(inst, blob) {
-  document.getElementById('audioPlayer').src = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  document.getElementById('audioPlayer').src = url;
   document.getElementById('resultTitle').textContent = `${inst.icon} ${inst.name} Version`;
   document.getElementById('resultPanel').classList.add('visible');
   document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'nearest' });
-  showToast(`🎶 ${inst.name} ready! Tap play to listen.`, 'success');
+  showToast(`🎶 ${inst.name} ready! Tap play ▶`, 'success');
 }
 
 function downloadResult() {
@@ -646,74 +848,77 @@ function downloadResult() {
     document.getElementById('noCreditsDesc').textContent = `You need ${DL_COST} credit to download. Watch an ad!`;
     openModal('noCreditsModal'); return;
   }
-  credits -= DL_COST; updateCreditsDisplay();
+  credits -= DL_COST; updateCredits();
   const inst = INSTRUMENTS.find(i => i.id === selectedInst);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(resultBlob);
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(resultBlob);
   a.download = `melody-synth-${inst?.id||'output'}.wav`;
   a.click();
   showToast('⬇ Downloading...', 'success');
 }
 
-// ══════════════════════════════════════════════════════
-//  ADS
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  ADS / EARN CREDITS
+// ════════════════════════════════════════════════════════════
 function showEarnModal() { openModal('earnModal'); }
 
 function watchAd() {
   closeModal('earnModal');
   if (IS_ANDROID && window.Android && typeof window.Android.showRewardedAd === 'function') {
-    window.Android.showRewardedAd(); // Real AdMob rewarded
+    window.Android.showRewardedAd();
   } else {
-    simulateRewardedAd(); // Simulated for web
+    simulateAd();
   }
 }
 
 window.onAdRewarded = function() {
-  credits += AD_REWARD; updateCreditsDisplay();
+  credits += AD_REWARD; updateCredits();
   showToast(`🪙 +${AD_REWARD} credits earned!`, 'success');
 };
 
-function simulateRewardedAd() {
+function simulateAd() {
   adSecs = AD_SECS;
-  const ls=document.getElementById('adLoadingScreen'),
-        cd=document.getElementById('adCountdown'),
-        sb=document.getElementById('adSkipBtn'),
-        an=document.getElementById('adNote'),
-        lt=document.getElementById('adLoadingText');
-  ls.classList.add('open');
-  lt.textContent='Loading ad...'; cd.style.display='none'; sb.style.display='none'; an.style.display='none';
+  const scr = document.getElementById('adScreen'),
+        cd  = document.getElementById('adCd'),
+        sk  = document.getElementById('adSkip'),
+        an  = document.getElementById('adNote'),
+        tx  = document.getElementById('adText');
+  scr.classList.add('open');
+  tx.textContent='Loading ad...'; cd.style.display='none'; sk.style.display='none';
+  if(an) an.style.display='none';
   setTimeout(() => {
-    lt.textContent='📺 Ad Playing'; cd.style.display='block'; an.style.display='block';
-    cd.textContent = adSecs+'s';
+    tx.textContent='📺 Ad Playing'; cd.style.display='block';
+    if(an) an.style.display='block';
+    cd.textContent=adSecs+'s';
     adTimer = setInterval(() => {
       adSecs--; cd.textContent=adSecs+'s';
-      if (adSecs <= AD_SECS-5) sb.style.display='block';
-      if (adSecs <= 0) { clearInterval(adTimer); adEnded(); }
+      if (adSecs <= AD_SECS-5) sk.style.display='block';
+      if (adSecs <= 0) { clearInterval(adTimer); adDone(); }
     }, 1000);
   }, 1500);
 }
 
-function adEnded() {
+function adDone() {
   clearInterval(adTimer);
-  document.getElementById('adLoadingScreen').classList.remove('open');
+  document.getElementById('adScreen').classList.remove('open');
   window.onAdRewarded();
 }
 
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 //  HELPERS
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
 });
-let toastTO;
+
+let tTO;
 function showToast(msg, type) {
-  const t=document.getElementById('toast');
+  const t = document.getElementById('toast');
   t.textContent=msg; t.className='toast show'+(type?' '+type:'');
-  clearTimeout(toastTO);
-  toastTO=setTimeout(()=>t.classList.remove('show'),3200);
+  clearTimeout(tTO);
+  tTO = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
 init();
@@ -721,19 +926,21 @@ init();
 
 <!--
 ╔══════════════════════════════════════════════════════════╗
-║              AD SETUP CHECKLIST                          ║
+║  HOW CONVERSION WORKS (no API, no account needed)        ║
 ╠══════════════════════════════════════════════════════════╣
-║  WEBSITE (AdSense):                                      ║
-║  1. Replace ca-pub-XXXXXXXXXXXXXXXX with your pub ID     ║
-║  2. Replace data-ad-slot="XXXXXXXXXX" with real slots    ║
-║     (create 3 ad units in AdSense dashboard)             ║
-║  3. Upload to GitHub Pages → AdSense auto-detects        ║
+║  1. User hums → microphone captured via MediaRecorder    ║
+║  2. YIN pitch detection finds exact note frequencies     ║
+║  3. Notes are grouped into a clean melody sequence       ║
+║  4. OfflineAudioContext synthesizes each note with:      ║
+║     - Harmonic overtones (makes it sound like real inst) ║
+║     - ADSR envelope (attack/decay/sustain/release)       ║
+║     - Reverb impulse response (room sound)               ║
+║  5. Output rendered to 44.1kHz stereo WAV blob           ║
+║  6. User plays it back instantly in the browser          ║
 ║                                                          ║
-║  ANDROID APP (AdMob):                                    ║
-║  1. Replace AdMob unit IDs in MainActivity.java          ║
-║  2. The app auto-detects Android WebView                 ║
-║  3. AdSense banners are hidden, AdMob banners shown      ║
-║  4. Rewarded ad calls Android.showRewardedAd()           ║
+║  AD SETUP:                                               ║
+║  Web  → Replace ca-pub-XXXXXXXXXXXXXXXX + ad slot IDs   ║
+║  App  → Replace AdMob IDs in MainActivity.java          ║
 ╚══════════════════════════════════════════════════════════╝
 -->
 </body>
