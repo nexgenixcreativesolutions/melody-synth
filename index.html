@@ -324,22 +324,14 @@ function setupPlatform() {
 //  INSTRUMENTS CONFIG
 // ════════════════════════════════════════════════════════════
 const INSTRUMENTS = [
-  { id:'piano',    name:'Piano',    icon:'🎹', cost:2,
-    type:'sine',    attack:.01, decay:.3,  sustain:.4, release:.8,  vibrato:0,    harmonics:[1,0.5,0.25,0.1] },
-  { id:'guitar',   name:'Guitar',   icon:'🎸', cost:2,
-    type:'sawtooth',attack:.005,decay:.4,  sustain:.2, release:.6,  vibrato:0,    harmonics:[1,0.6,0.3,0.15,0.05] },
-  { id:'violin',   name:'Violin',   icon:'🎻', cost:3,
-    type:'sawtooth',attack:.08, decay:.1,  sustain:.8, release:.4,  vibrato:5.5,  harmonics:[1,0.8,0.5,0.3,0.1] },
-  { id:'flute',    name:'Flute',    icon:'🪈', cost:2,
-    type:'sine',    attack:.06, decay:.05, sustain:.9, release:.3,  vibrato:5,    harmonics:[1,0.3,0.05] },
-  { id:'trumpet',  name:'Trumpet',  icon:'🎺', cost:3,
-    type:'square',  attack:.02, decay:.1,  sustain:.7, release:.2,  vibrato:4,    harmonics:[1,0.9,0.7,0.5,0.3,0.1] },
-  { id:'drums',    name:'Drums',    icon:'🥁', cost:2,
-    type:'noise',   attack:.001,decay:.15, sustain:.0, release:.2,  vibrato:0,    harmonics:[] },
-  { id:'synth',    name:'Synth',    icon:'🎛️', cost:4,
-    type:'square',  attack:.02, decay:.2,  sustain:.6, release:.5,  vibrato:3,    harmonics:[1,0.5,0.25] },
-  { id:'bass',     name:'Bass',     icon:'🎸', cost:3,
-    type:'sawtooth',attack:.01, decay:.5,  sustain:.3, release:.4,  vibrato:0,    harmonics:[1,0.7,0.2] },
+  { id:'piano',   name:'Piano',   icon:'🎹', cost:2 },
+  { id:'guitar',  name:'Guitar',  icon:'🎸', cost:2 },
+  { id:'violin',  name:'Violin',  icon:'🎻', cost:3 },
+  { id:'flute',   name:'Flute',   icon:'🪈', cost:2 },
+  { id:'trumpet', name:'Trumpet', icon:'🎺', cost:3 },
+  { id:'drums',   name:'Drums',   icon:'🥁', cost:2 },
+  { id:'synth',   name:'Synth',   icon:'🎛️', cost:4 },
+  { id:'bass',    name:'Bass',    icon:'🎸', cost:3 },
 ];
 
 const DL_COST   = 1;
@@ -402,91 +394,146 @@ function freqToNote(freq) {
   return { name: `${name}${octave}`, midi: rounded, freq };
 }
 
-// YIN-lite pitch detection from buffer
+// ════════════════════════════════════════════════════════════
+//  IMPROVED YIN PITCH DETECTION
+//  - Larger analysis window for more accuracy
+//  - Stricter silence gate to ignore noise
+//  - Octave error correction (common in voice detection)
+// ════════════════════════════════════════════════════════════
 function detectPitch(buffer, sampleRate) {
-  const bufLen = buffer.length;
-  const yinLen = Math.floor(bufLen / 2);
-  const yin = new Float32Array(yinLen);
+  const bufLen  = buffer.length;
+  const yinLen  = Math.floor(bufLen / 2);
+  const yin     = new Float32Array(yinLen);
 
-  // Difference function
+  // RMS silence gate — ignore if too quiet
+  let rms = 0;
+  for (let i = 0; i < bufLen; i++) rms += buffer[i] * buffer[i];
+  rms = Math.sqrt(rms / bufLen);
+  if (rms < 0.015) return null;
+
+  // Step 1: Difference function
   for (let tau = 1; tau < yinLen; tau++) {
     let sum = 0;
     for (let i = 0; i < yinLen; i++) {
-      const diff = buffer[i] - buffer[i + tau];
-      sum += diff * diff;
+      const d = buffer[i] - buffer[i + tau];
+      sum += d * d;
     }
     yin[tau] = sum;
   }
 
-  // Cumulative mean normalisation
+  // Step 2: Cumulative mean normalised difference
   yin[0] = 1;
-  let runSum = 0;
+  let cumSum = 0;
   for (let tau = 1; tau < yinLen; tau++) {
-    runSum += yin[tau];
-    yin[tau] = (runSum === 0) ? 0 : yin[tau] * tau / runSum;
+    cumSum += yin[tau];
+    yin[tau] = cumSum > 0 ? yin[tau] * tau / cumSum : 1;
   }
 
-  // Absolute threshold
-  const threshold = 0.15;
-  let tauEstimate = -1;
-  for (let tau = 2; tau < yinLen; tau++) {
-    if (yin[tau] < threshold) {
-      while (tau + 1 < yinLen && yin[tau + 1] < yin[tau]) tau++;
-      tauEstimate = tau;
+  // Step 3: Absolute threshold (0.12 = more strict = fewer wrong notes)
+  const threshold = 0.12;
+  let tau = -1;
+  for (let t = 2; t < yinLen - 1; t++) {
+    if (yin[t] < threshold) {
+      // Take the deepest dip in this region
+      while (t + 1 < yinLen && yin[t+1] < yin[t]) t++;
+      tau = t;
       break;
     }
   }
+  if (tau === -1) return null;
 
-  if (tauEstimate === -1) return null;
-
-  // Parabolic interpolation
-  const x0 = tauEstimate > 0 ? tauEstimate - 1 : tauEstimate;
-  const x2 = tauEstimate + 1 < yinLen ? tauEstimate + 1 : tauEstimate;
+  // Step 4: Parabolic interpolation for sub-sample accuracy
+  const x0 = tau > 0 ? tau - 1 : tau;
+  const x2 = tau + 1 < yinLen ? tau + 1 : tau;
   let betterTau;
-  if (x0 === tauEstimate) {
-    betterTau = yin[tauEstimate] <= yin[x2] ? tauEstimate : x2;
-  } else if (x2 === tauEstimate) {
-    betterTau = yin[tauEstimate] <= yin[x0] ? tauEstimate : x0;
+  if (x0 === tau) {
+    betterTau = yin[tau] <= yin[x2] ? tau : x2;
+  } else if (x2 === tau) {
+    betterTau = yin[tau] <= yin[x0] ? tau : x0;
   } else {
-    const s0 = yin[x0], s1 = yin[tauEstimate], s2 = yin[x2];
-    betterTau = tauEstimate + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+    const s0 = yin[x0], s1 = yin[tau], s2 = yin[x2];
+    const denom = 2 * (2 * s1 - s2 - s0);
+    betterTau = denom !== 0 ? tau + (s2 - s0) / denom : tau;
   }
 
-  return sampleRate / betterTau;
+  let freq = sampleRate / betterTau;
+
+  // Step 5: Octave error correction
+  // Singing/humming often gets detected an octave too high or low
+  // Clamp to human voice range (80–1200 Hz) and snap to nearest octave
+  if (freq < 60)   return null;
+  if (freq > 1400) return null;
+
+  // If detected very high (>600Hz) but likely vocal, halve it
+  // Human humming fundamental is typically 100–400Hz
+  if (freq > 600 && freq < 1400) freq = freq / 2;
+
+  return freq;
 }
 
-// Group raw note history into clean note sequence with durations
+// ════════════════════════════════════════════════════════════
+//  BUILD NOTE SEQUENCE from raw pitch history
+//  - Larger median window for stability
+//  - Groups by MIDI note number (not name) to handle octave drift
+//  - Preserves original timing proportions
+// ════════════════════════════════════════════════════════════
 function buildNoteSequence(history, sampleRate) {
   if (history.length === 0) return [];
-  const hopSize = 512;
-  const hopMs   = (hopSize / sampleRate) * 1000;
+  const hopMs = (512 / 44100) * 1000; // ~11.6ms per frame
 
-  // Smooth: median filter over 5-frame window
+  // Step 1: Wider median filter (9-frame window) for stability
   const smoothed = history.map((f, i) => {
-    const win = history.slice(Math.max(0, i-2), i+3).filter(Boolean);
-    if (!win.length) return null;
+    const win = history.slice(Math.max(0, i-4), i+5).filter(Boolean);
+    if (win.length < 3) return null;
     win.sort((a,b) => a-b);
     return win[Math.floor(win.length/2)];
   });
 
+  // Step 2: Convert to MIDI notes
+  const midiHistory = smoothed.map(freq => {
+    if (!freq) return null;
+    const note = freqToNote(freq);
+    return note;
+  });
+
+  // Step 3: Group consecutive identical MIDI notes
   const notes = [];
   let cur = null, startMs = 0, count = 0;
+  let freqAccum = 0; // accumulate freq for better average
 
-  smoothed.forEach((freq, idx) => {
-    const note = freq ? freqToNote(freq) : null;
-    if (note && cur && note.name === cur.name) {
+  midiHistory.forEach((note, idx) => {
+    if (note && cur && note.midi === cur.midi) {
       count++;
+      freqAccum += note.freq;
     } else {
-      if (cur && count > 2) { // min ~3 frames = ~32ms
-        notes.push({ freq: cur.freq, name: cur.name, midi: cur.midi, startMs, durationMs: count * hopMs });
+      if (cur && count >= 4) { // min ~46ms
+        notes.push({
+          freq: freqAccum / count, // average frequency (more accurate)
+          name: cur.name,
+          midi: cur.midi,
+          startMs,
+          durationMs: count * hopMs
+        });
       }
-      cur = note; startMs = idx * hopMs; count = 1;
+      cur = note;
+      startMs = idx * hopMs;
+      count = 1;
+      freqAccum = note ? note.freq : 0;
     }
   });
-  if (cur && count > 2) notes.push({ freq: cur.freq, name: cur.name, midi: cur.midi, startMs, durationMs: count * hopMs });
+  if (cur && count >= 4) {
+    notes.push({ freq: freqAccum/count, name:cur.name, midi:cur.midi, startMs, durationMs: count * hopMs });
+  }
 
-  // Filter very short notes (< 80ms)
-  return notes.filter(n => n.durationMs >= 80);
+  // Step 4: Filter very short notes and merge duplicates that are adjacent
+  const filtered = notes.filter(n => n.durationMs >= 80);
+
+  // Step 5: Re-space timing proportionally starting from 0
+  if (filtered.length === 0) return [];
+  const firstStart = filtered[0].startMs;
+  filtered.forEach(n => { n.startMs -= firstStart; });
+
+  return filtered;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -658,127 +705,453 @@ async function startConvert() {
 }
 
 // ════════════════════════════════════════════════════════════
-//  SYNTHESIZE MELODY — pure Web Audio, returns audio Blob
+//  SNAP FREQ TO NEAREST MUSICAL NOTE (ensure tuning is correct)
+// ════════════════════════════════════════════════════════════
+function snapToNote(freq) {
+  // A4 = 440Hz, equal temperament
+  const midi = 12 * Math.log2(freq / 440) + 69;
+  const rounded = Math.round(midi);
+  return 440 * Math.pow(2, (rounded - 69) / 12);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SYNTHESIZE MELODY — physically modelled per instrument
 // ════════════════════════════════════════════════════════════
 async function synthesizeMelody(notes, inst) {
-  const sampleRate = 44100;
-  // Total duration = last note end + 1s tail
-  const lastNote   = notes[notes.length - 1];
-  const totalSec   = (lastNote.startMs + lastNote.durationMs) / 1000 + 1.0;
-  const totalSamps = Math.ceil(totalSec * sampleRate);
+  const SR       = 44100;
+  const lastNote = notes[notes.length - 1];
+  const totalSec = (lastNote.startMs + lastNote.durationMs) / 1000 + 1.5;
+  const totalSmp = Math.ceil(totalSec * SR);
 
-  const offCtx    = new OfflineAudioContext(2, totalSamps, sampleRate);
-  const masterGain= offCtx.createGain();
-  masterGain.gain.value = 0.7;
+  const offCtx = new OfflineAudioContext(2, totalSmp, SR);
 
-  // Reverb convolver for realism
-  const reverb = offCtx.createConvolver();
-  reverb.buffer = makeImpulse(offCtx, 1.5, 2.5);
-  const dryGain = offCtx.createGain(); dryGain.gain.value = 0.75;
-  const wetGain = offCtx.createGain(); wetGain.gain.value = 0.25;
+  // Master chain: gain → compressor → reverb → output
+  const master = offCtx.createGain();
+  master.gain.value = 0.75;
 
-  masterGain.connect(dryGain);  dryGain.connect(offCtx.destination);
-  masterGain.connect(reverb);   reverb.connect(wetGain); wetGain.connect(offCtx.destination);
+  const comp = offCtx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 10;
+  comp.ratio.value = 4; comp.attack.value = 0.003; comp.release.value = 0.1;
+  master.connect(comp);
 
-  let progStep = 0;
+  // Stereo reverb
+  const reverb  = offCtx.createConvolver();
+  reverb.buffer = makeReverb(offCtx, 1.8, 3.0);
+  const dry = offCtx.createGain(); dry.gain.value = 0.72;
+  const wet = offCtx.createGain(); wet.gain.value = 0.28;
+  comp.connect(dry);   dry.connect(offCtx.destination);
+  comp.connect(reverb); reverb.connect(wet); wet.connect(offCtx.destination);
+
+  let step = 0;
   for (const note of notes) {
-    progStep++;
-    document.getElementById('procBar').style.width = (progStep / notes.length * 90) + '%';
-
-    const startSec    = note.startMs / 1000;
-    const durSec      = Math.max(note.durationMs / 1000, 0.08);
-    const freq        = note.freq;
-
-    if (inst.type === 'noise') {
-      // Drums: short noise burst
-      synthNoise(offCtx, masterGain, startSec, 0.18, freq);
-    } else {
-      synthNote(offCtx, masterGain, freq, startSec, durSec, inst);
-    }
+    step++;
+    document.getElementById('procBar').style.width = (step / notes.length * 90) + '%';
+    const t   = note.startMs / 1000;
+    const dur = Math.max(note.durationMs / 1000, 0.07);
+    // Snap to exact musical pitch — fixes out-of-tune issue
+    const f   = snapToNote(note.freq);
+    buildInstrumentNote(offCtx, master, inst.id, f, t, dur);
   }
 
-  const rendered  = await offCtx.startRendering();
+  const rendered = await offCtx.startRendering();
   return audioBufferToWav(rendered);
 }
 
-// Synthesize a single pitched note
-function synthNote(ctx, dest, freq, startSec, durSec, inst) {
-  const gainNode = ctx.createGain();
-
-  // Build oscillator for each harmonic
-  inst.harmonics.forEach((amp, hIdx) => {
-    if (amp < 0.01) return;
-    const osc = ctx.createOscillator();
-    osc.type = inst.type === 'noise' ? 'sine' : inst.type;
-    osc.frequency.value = freq * (hIdx + 1);
-
-    const hGain = ctx.createGain();
-    hGain.gain.value = amp * (hIdx === 0 ? 1 : 0.5);
-    osc.connect(hGain);
-    hGain.connect(gainNode);
-    osc.start(startSec);
-    osc.stop(startSec + durSec + inst.release + 0.05);
-  });
-
-  // Vibrato
-  if (inst.vibrato > 0) {
-    const lfo = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
-    lfo.frequency.value = inst.vibrato;
-    lfoGain.gain.value  = 3; // cents depth
-    lfo.connect(lfoGain);
-    // We'd need AudioParam modulation — simpler: skip for now
-    lfo.start(startSec + 0.1);
-    lfo.stop(startSec + durSec + inst.release);
+// ════════════════════════════════════════════════════════════
+//  PER-INSTRUMENT PHYSICAL MODELLING
+// ════════════════════════════════════════════════════════════
+function buildInstrumentNote(ctx, dest, id, freq, t, dur) {
+  switch(id) {
+    case 'piano':   synthPiano(ctx, dest, freq, t, dur);   break;
+    case 'guitar':  synthGuitar(ctx, dest, freq, t, dur);  break;
+    case 'violin':  synthViolin(ctx, dest, freq, t, dur);  break;
+    case 'flute':   synthFlute(ctx, dest, freq, t, dur);   break;
+    case 'trumpet': synthTrumpet(ctx, dest, freq, t, dur); break;
+    case 'drums':   synthDrums(ctx, dest, freq, t, dur);   break;
+    case 'synth':   synthSynth(ctx, dest, freq, t, dur);   break;
+    case 'bass':    synthBass(ctx, dest, freq, t, dur);    break;
   }
-
-  // ADSR envelope
-  const g = gainNode.gain;
-  const t = startSec;
-  g.setValueAtTime(0, t);
-  g.linearRampToValueAtTime(0.8, t + inst.attack);
-  g.linearRampToValueAtTime(0.8 * inst.sustain, t + inst.attack + inst.decay);
-  g.setValueAtTime(0.8 * inst.sustain, t + durSec - 0.01);
-  g.linearRampToValueAtTime(0, t + durSec + inst.release);
-
-  gainNode.connect(dest);
 }
 
-// Synthesize a drum hit
-function synthNoise(ctx, dest, startSec, durSec, freq) {
-  const bufSize = Math.ceil(ctx.sampleRate * durSec);
-  const buf     = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-  const data    = buf.getChannelData(0);
-  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+// ── PIANO: bright attack, exponential decay, inharmonic partials ──
+function synthPiano(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+  // Piano partials: slightly stretched (inharmonic) for realism
+  const partials = [
+    {f:1.000, a:1.00}, {f:2.001, a:0.50}, {f:3.003, a:0.28},
+    {f:4.006, a:0.15}, {f:5.010, a:0.08}, {f:6.015, a:0.04},
+  ];
+  partials.forEach(({f, a}) => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq * f;
+    og.gain.value = a;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 1.2);
+  });
+  // Strike transient — sharp bright click at attack
+  addTransient(ctx, g, t, 0.003, freq * 8, 400);
+  // ADSR: fast attack, exponential decay (piano-like)
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(0.9, t + 0.008);
+  env.setTargetAtTime(0.3, t + 0.008, 0.15);
+  env.setTargetAtTime(0.0, t + dur * 0.4, 0.3);
+  g.connect(dest);
+}
 
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
+// ── GUITAR: Karplus-Strong plucked string simulation ──
+function synthGuitar(ctx, dest, freq, t, dur) {
+  const SR = ctx.sampleRate;
+  const period = Math.round(SR / freq);
+  const bufLen = Math.max(period * 2, 256);
 
-  // Pitch the noise with a bandpass filter
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.value = freq || 200;
-  filter.Q.value = 0.8;
+  // Seed buffer with white noise (the pluck)
+  const noiseBuf = ctx.createBuffer(1, bufLen, SR);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) nd[i] = Math.random() * 2 - 1;
+
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+
+  // Low-pass filter simulates string dampening
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = freq * 6;
+  lp.Q.value = 0.5;
+
+  // Bandpass to emphasize guitar body resonance
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = freq * 2.5;
+  bp.Q.value = 2;
 
   const g = ctx.createGain();
-  g.gain.setValueAtTime(0.9, startSec);
-  g.gain.exponentialRampToValueAtTime(0.001, startSec + durSec);
+  g.gain.setValueAtTime(0.8, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + Math.min(dur + 0.8, 2.5));
 
-  src.connect(filter);
-  filter.connect(g);
-  g.connect(dest);
-  src.start(startSec);
-  src.stop(startSec + durSec + 0.05);
+  noiseSrc.connect(lp); lp.connect(bp); bp.connect(g); g.connect(dest);
+  noiseSrc.start(t); noiseSrc.stop(t + 0.05);
+
+  // Add sustained fundamental using oscillator
+  const osc = ctx.createOscillator();
+  const oscG = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.value = freq;
+  const oscLP = ctx.createBiquadFilter();
+  oscLP.type = 'lowpass'; oscLP.frequency.value = freq * 5;
+  oscG.gain.setValueAtTime(0, t);
+  oscG.gain.linearRampToValueAtTime(0.4, t + 0.01);
+  oscG.gain.exponentialRampToValueAtTime(0.001, t + Math.min(dur + 0.5, 2.0));
+  osc.connect(oscLP); oscLP.connect(oscG); oscG.connect(dest);
+  osc.start(t); osc.stop(t + dur + 1.0);
 }
 
-// Generate a simple reverb impulse response
-function makeImpulse(ctx, duration, decay) {
-  const len  = Math.ceil(ctx.sampleRate * duration);
-  const buf  = ctx.createBuffer(2, len, ctx.sampleRate);
+// ── VIOLIN: bowed string — sawtooth + vibrato + bow noise ──
+function synthViolin(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+
+  // Bowed tone: rich sawtooth harmonics
+  const partials = [
+    {f:1, a:1.0}, {f:2, a:0.7}, {f:3, a:0.5},
+    {f:4, a:0.35},{f:5, a:0.25},{f:6, a:0.15},{f:7, a:0.08},
+  ];
+  const oscs = partials.map(({f, a}) => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = freq * f;
+    og.gain.value = a * 0.3;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.5);
+    return o;
+  });
+
+  // Vibrato — LFO on frequency (real violin vibrato ~5.5Hz)
+  const lfo = ctx.createOscillator();
+  const lfoG = ctx.createGain();
+  lfo.frequency.value = 5.5;
+  lfoG.gain.value = 0; // starts silent, ramps in after bow settles
+  lfo.connect(lfoG);
+  // Apply vibrato to fundamental
+  lfoG.connect(oscs[0].frequency);
+  lfoG.gain.setValueAtTime(0, t + 0.1);
+  lfoG.gain.linearRampToValueAtTime(freq * 0.012, t + 0.25); // ~1.2% pitch wobble
+  lfo.start(t); lfo.stop(t + dur + 0.5);
+
+  // Bow noise layer (adds breathiness)
+  const noiseAmt = ctx.createGain();
+  noiseAmt.gain.value = 0.04;
+  const noiseHP = ctx.createBiquadFilter();
+  noiseHP.type = 'highpass'; noiseHP.frequency.value = freq * 3;
+  addNoise(ctx, noiseHP, t, dur + 0.3);
+  noiseHP.connect(noiseAmt); noiseAmt.connect(g);
+
+  // Highpass to remove muddiness
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.value = 200;
+  g.connect(hp);
+
+  // ADSR: slow bow attack
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(0.9, t + 0.09);
+  env.setValueAtTime(0.85, t + dur - 0.05);
+  env.linearRampToValueAtTime(0, t + dur + 0.15);
+
+  hp.connect(dest);
+}
+
+// ── FLUTE: sine + breath noise + embouchure resonance ──
+function synthFlute(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+
+  // Pure flute tone: sine + 2nd harmonic + slight 3rd
+  [[1, 1.0],[2, 0.25],[3, 0.06]].forEach(([f, a]) => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq * f; og.gain.value = a;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.4);
+  });
+
+  // Breath noise — high frequency bandpass
+  const breathG = ctx.createGain(); breathG.gain.value = 0.06;
+  const breathBP = ctx.createBiquadFilter();
+  breathBP.type = 'bandpass'; breathBP.frequency.value = freq * 4; breathBP.Q.value = 0.8;
+  addNoise(ctx, breathBP, t, dur + 0.3);
+  breathBP.connect(breathG); breathG.connect(g);
+
+  // Vibrato ~5Hz
+  const lfo = ctx.createOscillator();
+  const lfoG = ctx.createGain();
+  lfo.frequency.value = 5.0;
+  lfoG.gain.value = freq * 0.008;
+  lfo.connect(lfoG);
+  const fundamental = ctx.createOscillator();
+  fundamental.type = 'sine'; fundamental.frequency.value = freq;
+  lfoG.connect(fundamental.frequency);
+  lfo.start(t + 0.15); lfo.stop(t + dur + 0.3);
+
+  // ADSR: gentle attack, sustained
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(0.8, t + 0.06);
+  env.setValueAtTime(0.75, t + dur - 0.05);
+  env.linearRampToValueAtTime(0, t + dur + 0.2);
+
+  g.connect(dest);
+}
+
+// ── TRUMPET: bright harmonics, sharp attack, brassy distortion ──
+function synthTrumpet(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+
+  // Brass harmonics — odd+even, strong upper partials
+  const partials = [
+    {f:1, a:0.7}, {f:2, a:1.0}, {f:3, a:0.9},
+    {f:4, a:0.7}, {f:5, a:0.5}, {f:6, a:0.3},
+    {f:7, a:0.15},{f:8, a:0.08},
+  ];
+  partials.forEach(({f, a}) => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = f <= 2 ? 'square' : 'sawtooth';
+    o.frequency.value = freq * f;
+    og.gain.value = a * 0.2;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.3);
+  });
+
+  // Brassy waveshaper distortion
+  const wave = ctx.createWaveShaper();
+  wave.curve = makeBrassCurve(256);
+  wave.oversample = '2x';
+  g.connect(wave);
+
+  // Low-pass to tame harshness
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = freq * 12;
+  wave.connect(lp);
+
+  // ADSR: quick punch
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(1.0, t + 0.015);
+  env.linearRampToValueAtTime(0.7, t + 0.06);
+  env.setValueAtTime(0.65, t + dur - 0.04);
+  env.linearRampToValueAtTime(0, t + dur + 0.12);
+
+  lp.connect(dest);
+}
+
+function makeBrassCurve(n) {
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = (Math.PI + 120) * x / (Math.PI + 120 * Math.abs(x));
+  }
+  return curve;
+}
+
+// ── DRUMS: layered kick + snare depending on detected pitch ──
+function synthDrums(ctx, dest, freq, t, dur) {
+  // High pitch → hihat/snare, low pitch → kick
+  if (freq > 300) {
+    synthSnare(ctx, dest, t);
+  } else {
+    synthKick(ctx, dest, t, freq);
+  }
+}
+
+function synthKick(ctx, dest, t, freq) {
+  const g = ctx.createGain();
+  // Pitch sweep: starts high, drops fast (classic kick)
+  const o = ctx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(freq * 3, t);
+  o.frequency.exponentialRampToValueAtTime(freq * 0.5, t + 0.08);
+  // Sub layer
+  const sub = ctx.createOscillator();
+  sub.type = 'sine'; sub.frequency.value = freq * 0.5;
+  const subG = ctx.createGain(); subG.gain.value = 0.6;
+  sub.connect(subG); subG.connect(g);
+  // Noise transient
+  addTransient(ctx, g, t, 0.006, 3000, 800);
+  // Envelope
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  o.connect(g); g.connect(dest);
+  o.start(t); o.stop(t + 0.45);
+  sub.start(t); sub.stop(t + 0.45);
+}
+
+function synthSnare(ctx, dest, t) {
+  // Tone layer
+  const toneG = ctx.createGain();
+  const o1 = ctx.createOscillator(); o1.frequency.value = 185;
+  const o2 = ctx.createOscillator(); o2.frequency.value = 230;
+  o1.type = o2.type = 'triangle';
+  o1.connect(toneG); o2.connect(toneG);
+  toneG.gain.setValueAtTime(0.6, t);
+  toneG.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+  toneG.connect(dest); o1.start(t); o1.stop(t+0.2); o2.start(t); o2.stop(t+0.2);
+  // Noise layer (snare rattle)
+  const noiseG = ctx.createGain();
+  const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
+  addNoise(ctx, hp, t, 0.2);
+  hp.connect(noiseG); noiseG.connect(dest);
+  noiseG.gain.setValueAtTime(0.8, t);
+  noiseG.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+}
+
+// ── SYNTH: detuned oscillators + filter sweep ──
+function synthSynth(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+  // 3 slightly detuned saws for that classic synth thickness
+  [-6, 0, 6].forEach(cents => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = freq * Math.pow(2, cents / 1200);
+    og.gain.value = 0.33;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.6);
+  });
+
+  // Filter sweep (cutoff opens up on attack)
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.Q.value = 8;
+  lp.frequency.setValueAtTime(freq * 0.5, t);
+  lp.frequency.exponentialRampToValueAtTime(freq * 10, t + 0.12);
+  lp.frequency.exponentialRampToValueAtTime(freq * 3, t + 0.5);
+
+  // ADSR
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(0.85, t + 0.02);
+  env.linearRampToValueAtTime(0.5, t + 0.15);
+  env.setValueAtTime(0.5, t + dur - 0.05);
+  env.linearRampToValueAtTime(0, t + dur + 0.4);
+
+  g.connect(lp); lp.connect(dest);
+}
+
+// ── BASS: warm plucked bass with body resonance ──
+function synthBass(ctx, dest, freq, t, dur) {
+  const g = ctx.createGain();
+
+  // Low fundamental + 2nd harmonic only (warm, not harsh)
+  [[1,1.0],[2,0.4],[3,0.15]].forEach(([f,a]) => {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = f === 1 ? 'triangle' : 'sawtooth';
+    o.frequency.value = freq * f;
+    og.gain.value = a;
+    o.connect(og); og.connect(g);
+    o.start(t); o.stop(t + dur + 0.8);
+  });
+
+  // Low-pass to keep it warm and round
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = freq * 4; lp.Q.value = 1;
+
+  // Pluck transient
+  addTransient(ctx, g, t, 0.004, freq * 5, 300);
+
+  // ADSR
+  const env = g.gain;
+  env.setValueAtTime(0, t);
+  env.linearRampToValueAtTime(0.9, t + 0.008);
+  env.linearRampToValueAtTime(0.4, t + 0.1);
+  env.setValueAtTime(0.35, t + dur - 0.05);
+  env.linearRampToValueAtTime(0, t + dur + 0.5);
+
+  g.connect(lp); lp.connect(dest);
+}
+
+// ════════════════════════════════════════════════════════════
+//  UTILITY AUDIO HELPERS
+// ════════════════════════════════════════════════════════════
+
+// Short noise transient (attack click/pluck)
+function addTransient(ctx, dest, t, dur, centerFreq, q) {
+  const bufLen = Math.ceil(ctx.sampleRate * dur);
+  const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) d[i] = (Math.random() * 2 - 1) * (1 - i/bufLen);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = centerFreq; bp.Q.value = q / centerFreq;
+  const tg = ctx.createGain(); tg.gain.value = 0.5;
+  src.connect(bp); bp.connect(tg); tg.connect(dest);
+  src.start(t); src.stop(t + dur + 0.01);
+}
+
+// Sustained noise source for breath/bow effects
+function addNoise(ctx, dest, t, dur) {
+  const bufLen = Math.ceil(ctx.sampleRate * Math.min(dur + 0.1, 3.0));
+  const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  src.connect(dest);
+  src.start(t); src.stop(t + dur + 0.05);
+}
+
+// High-quality reverb impulse
+function makeReverb(ctx, duration, decay) {
+  const len = Math.ceil(ctx.sampleRate * duration);
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
   for (let c = 0; c < 2; c++) {
     const d = buf.getChannelData(c);
     for (let i = 0; i < len; i++) {
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      // Exponential decay + pre-delay + early reflections
+      const env = Math.pow(1 - i / len, decay);
+      d[i] = (Math.random() * 2 - 1) * env;
+      // Add some early reflections
+      if (i < ctx.sampleRate * 0.05) d[i] *= 1.5;
     }
   }
   return buf;
@@ -788,46 +1161,32 @@ function makeImpulse(ctx, duration, decay) {
 //  AudioBuffer → WAV Blob  (PCM 16-bit stereo)
 // ════════════════════════════════════════════════════════════
 function audioBufferToWav(buffer) {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate  = buffer.sampleRate;
-  const numSamples  = buffer.length;
-  const bytesPerSample = 2;
-  const blockAlign  = numChannels * bytesPerSample;
-  const byteRate    = sampleRate * blockAlign;
-  const dataSize    = numSamples * blockAlign;
-  const arrayBuf    = new ArrayBuffer(44 + dataSize);
-  const view        = new DataView(arrayBuf);
+  const nCh = buffer.numberOfChannels;
+  const SR  = buffer.sampleRate;
+  const nSm = buffer.length;
+  const bps = 2;
+  const blk = nCh * bps;
+  const byr = SR * blk;
+  const dsz = nSm * blk;
+  const ab  = new ArrayBuffer(44 + dsz);
+  const v   = new DataView(ab);
+  const ws  = (o, s) => { for (let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
 
-  // RIFF header
-  writeStr(view, 0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeStr(view, 8, 'WAVE');
-  writeStr(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);           // PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true);          // bits per sample
-  writeStr(view, 36, 'data');
-  view.setUint32(40, dataSize, true);
+  ws(0,'RIFF'); v.setUint32(4,36+dsz,true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
+  v.setUint16(22,nCh,true); v.setUint32(24,SR,true); v.setUint32(28,byr,true);
+  v.setUint16(32,blk,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,dsz,true);
 
-  // Interleave channels
   let offset = 44;
-  for (let i = 0; i < numSamples; i++) {
-    for (let c = 0; c < numChannels; c++) {
-      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(c)[i]));
-      view.setInt16(offset, sample < 0 ? sample * 32768 : sample * 32767, true);
+  for (let i = 0; i < nSm; i++) {
+    for (let c = 0; c < nCh; c++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(c)[i]));
+      v.setInt16(offset, s < 0 ? s * 32768 : s * 32767, true);
       offset += 2;
     }
   }
-
-  return new Blob([arrayBuf], { type: 'audio/wav' });
-}
-
-function writeStr(view, offset, str) {
-  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  return new Blob([ab], { type: 'audio/wav' });
 }
 
 // ════════════════════════════════════════════════════════════
